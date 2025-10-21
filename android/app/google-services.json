@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "629210070387",
+    "project_id": "sugaryapp3",
+    "storage_bucket": "sugaryapp3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:629210070387:android:db41e80da61e2540ce5906",
+        "android_client_info": {
+          "package_name": "com.example.mysugaryapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNIwOqB049fWDhB7sIJHnK9ZUxPN5KkXM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
