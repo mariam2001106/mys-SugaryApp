@@ -11,7 +11,12 @@ class ProfileService {
     final ref = _userDoc(uid);
     final snap = await ref.get();
     if (!snap.exists) {
-      await ref.set(UserProfile.initial(uid).toMap(), SetOptions(merge: true));
+      final initial = UserProfile.initial(uid).toMap();
+      initial['createdAt'] = FieldValue.serverTimestamp();
+      initial['updatedAt'] = FieldValue.serverTimestamp();
+      await ref.set(initial, SetOptions(merge: true));
+      // ignore: avoid_print
+      print('[ProfileService] Created users/$uid');
     }
   }
 
@@ -25,9 +30,13 @@ class ProfileService {
   Future<void> updatePartial(String uid, Map<String, dynamic> data) async {
     data['updatedAt'] = FieldValue.serverTimestamp();
     await _userDoc(uid).set(data, SetOptions(merge: true));
+    // ignore: avoid_print
+    print('[ProfileService] Updated users/$uid with: $data');
   }
 
   Future<void> completeOnboarding(String uid) async {
     await updatePartial(uid, {'onboardingComplete': true});
+    // ignore: avoid_print
+    print('[ProfileService] Completed onboarding for $uid');
   }
 }

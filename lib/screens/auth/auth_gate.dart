@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:mysugaryapp/screens/setup/personal_setup_wizerd.dart';
-import 'package:mysugaryapp/services/profile_service.dart';
-import 'package:mysugaryapp/models/user_profile.dart';
-import 'package:mysugaryapp/screens/home/home_screen.dart';
+import '../../services/profile_service.dart';
+import '../../models/user_profile.dart';
+import '../setup/personal_setup_wizard.dart';
+import '../home/home_screen.dart';
 import 'sign_in_screen.dart';
 
 class AuthGate extends StatelessWidget {
