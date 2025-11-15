@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:mysugaryapp/screens/setup/personal_setup_wizerd.dart';
-import 'package:mysugaryapp/services/profile_service.dart';
-import 'package:mysugaryapp/models/user_profile.dart';
-import 'package:mysugaryapp/screens/home/home_screen.dart';
+import '../../services/profile_service.dart';
+import '../../models/user_profile.dart';
+import '../setup/personal_setup_wizerd.dart';
+import '../home/home_screen.dart';
 import 'sign_in_screen.dart';
 
 class AuthGate extends StatelessWidget {
@@ -43,14 +43,18 @@ class AuthGate extends StatelessWidget {
                   return const _Splash();
                 }
                 if (profSnap.hasError) {
-                  return _ErrorScreen('Profile stream error: ${profSnap.error}');
+                  return _ErrorScreen(
+                    'Profile stream error: ${profSnap.error}',
+                  );
                 }
                 final profile = profSnap.data;
 
                 // If profile is missing or incomplete → wizard
                 if (profile == null || !profile.onboardingComplete) {
                   // ignore: avoid_print
-                  print('[AuthGate] Routing to Setup Wizard (profile null or incomplete)');
+                  print(
+                    '[AuthGate] Routing to Setup Wizard (profile null or incomplete)',
+                  );
                   return PersonalSetupWizard(uid: user.uid);
                 }
 
