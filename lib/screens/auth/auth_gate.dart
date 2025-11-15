@@ -17,8 +17,14 @@ class AuthGate extends StatelessWidget {
         if (authSnap.connectionState == ConnectionState.waiting) {
           return const _Splash();
         }
+        if (authSnap.hasError) {
+          return _ErrorScreen('Auth error: ${authSnap.error}');
+        }
         final user = authSnap.data;
         if (user == null) return const SignInScreen();
+
+        // ignore: avoid_print
+        print('[AuthGate] Signed in as ${user.uid} (${user.email})');
 
         final svc = ProfileService();
         return FutureBuilder<void>(
@@ -27,16 +33,30 @@ class AuthGate extends StatelessWidget {
             if (createSnap.connectionState == ConnectionState.waiting) {
               return const _Splash();
             }
+            if (createSnap.hasError) {
+              return _ErrorScreen('Create profile error: ${createSnap.error}');
+            }
             return StreamBuilder<UserProfile?>(
               stream: svc.streamProfile(user.uid),
               builder: (context, profSnap) {
                 if (profSnap.connectionState == ConnectionState.waiting) {
                   return const _Splash();
                 }
+                if (profSnap.hasError) {
+                  return _ErrorScreen('Profile stream error: ${profSnap.error}');
+                }
                 final profile = profSnap.data;
+
+                // If profile is missing or incomplete → wizard
                 if (profile == null || !profile.onboardingComplete) {
+                  // ignore: avoid_print
+                  print('[AuthGate] Routing to Setup Wizard (profile null or incomplete)');
                   return PersonalSetupWizard(uid: user.uid);
                 }
+
+                // else → Home
+                // ignore: avoid_print
+                print('[AuthGate] Routing to Home (onboarding complete)');
                 return const HomeScreen();
               },
             );
@@ -52,5 +72,16 @@ class _Splash extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(body: Center(child: CircularProgressIndicator()));
+  }
+}
+
+class _ErrorScreen extends StatelessWidget {
+  final String message;
+  const _ErrorScreen(this.message);
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(child: Text(message, textAlign: TextAlign.center)),
+    );
   }
 }

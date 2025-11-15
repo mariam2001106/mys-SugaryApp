@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'sugaryapp3.firebasestorage.app',
     measurementId: 'G-CLLGV6WEJ0',
   );
+
 }
