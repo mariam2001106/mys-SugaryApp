@@ -1,6 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import '../../services/auth_service.dart';
+import 'package:mysugaryapp/screens/setup/personal_setup_wizerd.dart';
+import 'package:mysugaryapp/services/profile_service.dart';
+import 'package:mysugaryapp/services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -27,21 +30,53 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  Future<void> _signUp() async {
+  Future<void> _signUp(
+    BuildContext context,
+    String email,
+    String password,
+  ) async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      await _auth.signUpWithEmail(_emailCtrl.text.trim(), _passwordCtrl.text);
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
+      final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final user = cred.user;
+      if (user == null) {
+        // show error
+        return;
       }
+
+      // If the auth call reports this is a new user, open wizard.
+      final isNew = cred.additionalUserInfo?.isNewUser ?? false;
+
+      // Ensure profile doc exists with defaults
+      await ProfileService().createIfMissing(user.uid);
+
+      if (isNew) {
+        // New account -> show setup wizard immediately
+        if (context.mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => PersonalSetupWizard(uid: user.uid),
+            ),
+          );
+        }
+      } else {
+        // Not a new account (rare): fallback to sign-in logic
+        if (context.mounted)
+          Navigator.of(context).pushReplacementNamed('/home');
+      }
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message ?? 'Sign up error')));
     } catch (e) {
-      final msg = _auth.mapFirebaseAuthError(e);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(msg)));
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Unexpected error: $e')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -112,7 +147,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   height: 52,
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed: _loading ? null : _signUp,
+                    onPressed: _loading
+                        ? null
+                        : () => _signUp(
+                            context,
+                            _emailCtrl.text.trim(),
+                            _passwordCtrl.text,
+                          ),
                     child: _loading
                         ? const CircularProgressIndicator()
                         : Text('sign_up.cta'.tr()),

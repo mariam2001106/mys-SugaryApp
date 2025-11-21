@@ -1,7 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import '../../services/auth_service.dart';
-import '../../widgets/brabd_logo.dart';
+import 'package:mysugaryapp/screens/setup/personal_setup_wizerd.dart';
+import 'package:mysugaryapp/services/profile_service.dart';
+import 'package:mysugaryapp/services/auth_service.dart';
+import 'package:mysugaryapp/widgets/brabd_logo.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -29,8 +33,55 @@ class _SignInScreenState extends State<SignInScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
+      // sign in via your AuthService (keeps your error mapping)
       await _auth.signInWithEmail(_emailCtrl.text.trim(), _passwordCtrl.text);
-      if (mounted) Navigator.of(context).pushReplacementNamed('/home');
+
+      // now get the firebase user
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('sign_in.failed_no_user'.tr())),
+          );
+        }
+        return;
+      }
+
+      final uid = user.uid;
+      final docRef = FirebaseFirestore.instance.collection('users').doc(uid);
+
+      // Read the profile once to decide where to navigate.
+      final snap = await docRef.get();
+
+      if (snap.exists) {
+        final data = snap.data()!;
+        final onboardingComplete =
+            (data['onboardingComplete'] ?? false) as bool;
+        if (onboardingComplete) {
+          // user already completed onboarding -> go Home
+          if (mounted) Navigator.of(context).pushReplacementNamed('/home');
+          return;
+        } else {
+          // doc exists but not complete -> go to wizard
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => PersonalSetupWizard(uid: uid)),
+            );
+          }
+          return;
+        }
+      } else {
+        // no doc exists yet -> create defaults and open wizard
+        await ProfileService().createIfMissing(
+          uid,
+        ); // ensures onboardingComplete:false
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => PersonalSetupWizard(uid: uid)),
+          );
+        }
+        return;
+      }
     } catch (e) {
       final msg = _auth.mapFirebaseAuthError(e);
       if (mounted) {
