@@ -43,14 +43,18 @@ class AuthGate extends StatelessWidget {
                   return const _Splash();
                 }
                 if (profSnap.hasError) {
-                  return _ErrorScreen('Profile stream error: ${profSnap.error}');
+                  return _ErrorScreen(
+                    'Profile stream error: ${profSnap.error}',
+                  );
                 }
                 final profile = profSnap.data;
 
                 // If profile is missing or incomplete → wizard
                 if (profile == null || !profile.onboardingComplete) {
                   // ignore: avoid_print
-                  print('[AuthGate] Routing to Setup Wizard (profile null or incomplete)');
+                  print(
+                    '[AuthGate] Routing to Setup Wizard (profile null or incomplete)',
+                  );
                   return PersonalSetupWizard(uid: user.uid);
                 }
 

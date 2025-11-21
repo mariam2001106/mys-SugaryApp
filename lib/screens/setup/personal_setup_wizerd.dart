@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/user_profile.dart';
 import '../../services/profile_service.dart';
+import '../home/home_screen.dart';
 
 class PersonalSetupWizard extends StatefulWidget {
   final String uid;
@@ -46,7 +47,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
   }
 
   static const int totalSteps = 7;
-  static const Color accent = Color(0xFF5B5CE6);
+  static const Color accent = Color(0xFF0D3B66); // adjust to your theme
 
   int get _progressNumerator => step + 1;
 
@@ -83,7 +84,9 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
           break;
         case 4:
           await svc.updatePartial(widget.uid, {
-            'medicationName': _medName.text.trim().isEmpty ? null : _medName.text.trim(),
+            'medicationName': _medName.text.trim().isEmpty
+                ? null
+                : _medName.text.trim(),
             'onboardingStep': step,
           });
           break;
@@ -109,15 +112,20 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
           });
           await svc.completeOnboarding(widget.uid);
           if (!mounted) return;
-          Navigator.of(context).pushReplacementNamed('/home');
+          // navigate directly to HomeScreen (no named route dependency)
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
           return;
       }
+
       if (mounted) setState(() => step += 1);
-    } catch (_) {
+    } catch (e) {
+      // Show error to user
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('حدث خطأ غير متوقع. حاول مرة أخرى.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('حدث خطأ: $e')));
       }
     } finally {
       if (mounted) setState(() => saving = false);
@@ -144,7 +152,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
         return true;
       case 2:
         if (_insulin == null) {
-          toast('الرجاء اختيار طريقة العلاج بالأنسولين.');
+          toast('الرجاء اختيار طريقة العلاج.');
           return false;
         }
         return true;
@@ -159,26 +167,29 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
         final tmin = int.tryParse(_targetMin.text.trim());
         final tmax = int.tryParse(_targetMax.text.trim());
         final vl = int.tryParse(_veryLow.text.trim());
-        final ok = vh != null &&
+        final ok =
+            vh != null &&
             tmin != null &&
             tmax != null &&
             vl != null &&
             tmin < tmax &&
             vl >= 40 &&
             vh >= 150;
-        if (!ok) toast('رجاءً أدخل قيم جلوكوز صحيحة.');
+        if (!ok) toast('الرجاء إدخال قيم جلوكوز صحيحة.');
         return ok;
       default:
         return true;
     }
   }
 
-  void toast(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+  void toast(String m) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
 
   int _computeAge(DateTime dob) {
     final now = DateTime.now();
     int age = now.year - dob.year;
-    if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+    if (now.month < dob.month ||
+        (now.month == dob.month && now.day < dob.day)) {
       age--;
     }
     return age;
@@ -186,92 +197,115 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final isRTL = Directionality.of(context) == TextDirection.rtl;
-    final bg = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF0F141A)
-        : cs.surface;
+    // Force RTL for this page and use directional paddings/alignment
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Builder(
+        builder: (context) {
+          final cs = Theme.of(context).colorScheme;
+          final bg = Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF0F141A)
+              : cs.surface;
 
-    final content = Column(
-      children: [
-        // Top progress
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: _progressNumerator / totalSteps,
-              minHeight: 6,
-              color: accent,
-              backgroundColor: cs.onSurface.withValues(alpha:  0.12),
-            ),
-          ),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
+          return Scaffold(
+            backgroundColor: bg,
+            body: SafeArea(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ..._buildStepContent(cs),
-                  const SizedBox(height: 28),
-                  // Continue
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accent,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(54),
-                        shape: const StadiumBorder(),
+                  // Top progress
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: _progressNumerator / totalSteps,
+                        minHeight: 6,
+                        color: accent,
+                        backgroundColor: cs.onSurface.withValues(alpha: 0.12),
                       ),
-                      onPressed: saving ? null : onContinue,
-                      child: saving
-                          ? const SizedBox(
-                              height: 22, width: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.4))
-                          : const Text('متابعة', style: TextStyle(fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 520),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            ..._buildStepContent(cs),
+                            const SizedBox(height: 28),
+                            // Continue
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: accent,
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size.fromHeight(54),
+                                  shape: const StadiumBorder(),
+                                ),
+                                onPressed: saving ? null : onContinue,
+                                child: saving
+                                    ? const SizedBox(
+                                        height: 22,
+                                        width: 22,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2.4,
+                                        ),
+                                      )
+                                    : const Text(
+                                        'متابعة',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Bottom bar: Back + step indicator
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: Row(
+                      children: [
+                        TextButton(
+                          style: TextButton.styleFrom(
+                            backgroundColor: cs.onSurface.withValues(
+                              alpha: 0.06,
+                            ),
+                            shape: const StadiumBorder(),
+                            foregroundColor: cs.onSurface,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 12,
+                            ),
+                          ),
+                          onPressed: step == 0 ? null : onBack,
+                          child: const Text('رجوع'),
+                        ),
+                        const Spacer(),
+                        Text(
+                          'الخطوة $_progressNumerator من $totalSteps •',
+                          style: TextStyle(
+                            color: cs.onSurface.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-        // Bottom bar: Back + step indicator
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Row(
-            children: [
-              TextButton(
-                style: TextButton.styleFrom(
-                  backgroundColor: cs.onSurface.withValues(alpha: .06),
-                  shape: const StadiumBorder(),
-                  foregroundColor: cs.onSurface,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                ),
-                onPressed: step == 0 ? null : onBack,
-                child: const Text('رجوع'),
-              ),
-              const Spacer(),
-              Text('الخطوة $_progressNumerator من $totalSteps •',
-                  style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7))),
-            ],
-          ),
-        )
-      ],
-    );
-
-    return Scaffold(
-      backgroundColor: bg,
-      body: SafeArea(
-        child: isRTL
-            ? content
-            : Directionality( // force RTL when Arabic locale isn’t applied globally
-                textDirection: TextDirection.rtl,
-                child: content,
-              ),
+          );
+        },
       ),
     );
   }
@@ -286,6 +320,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
             Wrap(
               spacing: 12,
               runSpacing: 12,
+              textDirection: TextDirection.rtl,
               children: [
                 _choicePill(
                   label: 'النوع الأول',
@@ -324,6 +359,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
             Wrap(
               spacing: 12,
               runSpacing: 12,
+              textDirection: TextDirection.rtl,
               children: [
                 _choicePill(
                   label: 'نعم',
@@ -347,12 +383,13 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
             Wrap(
               spacing: 12,
               runSpacing: 12,
+              textDirection: TextDirection.rtl,
               children: [
-                // FIX: one chip for Pen/Syringe so only one can be selected
                 _choicePill(
-                  label: 'قلم/حقنة',
+                  label: 'قلم / حقنة',
                   selected: _insulin == InsulinMethod.penSyringe,
-                  onTap: () => setState(() => _insulin = InsulinMethod.penSyringe),
+                  onTap: () =>
+                      setState(() => _insulin = InsulinMethod.penSyringe),
                 ),
                 _choicePill(
                   label: 'مضخة',
@@ -371,7 +408,8 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
       case 3:
         final today = DateTime.now();
         final firstDate = DateTime(1900);
-        final initial = _dob ?? DateTime(today.year - 30, today.month, today.day);
+        final initial =
+            _dob ?? DateTime(today.year - 30, today.month, today.day);
         return _section(
           title: 'تاريخ الميلاد',
           subtitle: 'يساعدنا هذا في تقديم توصيات مخصصة لإدارة صحتك.',
@@ -404,6 +442,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
             Wrap(
               spacing: 12,
               runSpacing: 12,
+              textDirection: TextDirection.rtl,
               children: MedTime.values.map((t) {
                 final label = switch (t) {
                   MedTime.morning => 'صباحًا',
@@ -433,16 +472,21 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
       case 6:
         return _section(
           title: 'ما هي حدود الجلوكوز لديك؟',
-          subtitle: 'عيِّن مرتفع جدًا، والمدى المستهدف، ومنخفض جدًا (mg/dL).',
+          subtitle:
+              'عيِّن المرتفع جدًا، والمدى المستهدف، والمنخفض جدًا (mg/dL).',
           children: [
             Row(
+              textDirection: TextDirection.rtl,
               children: [
                 Expanded(
                   child: TextField(
                     controller: _veryHigh,
                     keyboardType: TextInputType.number,
                     textDirection: TextDirection.rtl,
-                    decoration: const InputDecoration(labelText: 'مرتفع جدًا', suffixText: 'mg/dL'),
+                    decoration: const InputDecoration(
+                      labelText: 'مرتفع جدًا',
+                      suffixText: 'mg/dL',
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -451,20 +495,27 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                     controller: _veryLow,
                     keyboardType: TextInputType.number,
                     textDirection: TextDirection.rtl,
-                    decoration: const InputDecoration(labelText: 'منخفض جدًا', suffixText: 'mg/dL'),
+                    decoration: const InputDecoration(
+                      labelText: 'منخفض جدًا',
+                      suffixText: 'mg/dL',
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             Row(
+              textDirection: TextDirection.rtl,
               children: [
                 Expanded(
                   child: TextField(
                     controller: _targetMin,
                     keyboardType: TextInputType.number,
                     textDirection: TextDirection.rtl,
-                    decoration: const InputDecoration(labelText: 'المدى المستهدف (أدنى)', suffixText: 'mg/dL'),
+                    decoration: const InputDecoration(
+                      labelText: 'المدى المستهدف (أدنى)',
+                      suffixText: 'mg/dL',
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -473,7 +524,10 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                     controller: _targetMax,
                     keyboardType: TextInputType.number,
                     textDirection: TextDirection.rtl,
-                    decoration: const InputDecoration(labelText: 'المدى المستهدف (أعلى)', suffixText: 'mg/dL'),
+                    decoration: const InputDecoration(
+                      labelText: 'المدى المستهدف (أعلى)',
+                      suffixText: 'mg/dL',
+                    ),
                   ),
                 ),
               ],
@@ -495,7 +549,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
       const SizedBox(height: 10),
       Text(
         title,
-        textAlign: TextAlign.center,
+        textAlign: TextAlign.right,
         style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w800,
@@ -505,7 +559,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
       const SizedBox(height: 8),
       Text(
         subtitle,
-        textAlign: TextAlign.center,
+        textAlign: TextAlign.right,
         style: TextStyle(
           fontSize: 14,
           color: cs.onSurface.withValues(alpha: 0.7),
@@ -531,7 +585,9 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
           color: selected ? accent : cs.onSurface.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
-            color: selected ? Colors.transparent : cs.onSurface.withValues(alpha: 0.12),
+            color: selected
+                ? Colors.transparent
+                : cs.onSurface.withValues(alpha: 0.12),
           ),
         ),
         child: Text(
