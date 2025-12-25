@@ -1,4 +1,9 @@
+// Note: kept original filename to match your imports.
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart'
+    as fr; // avoid shadowing issues with TextDirection
+import 'package:easy_localization/easy_localization.dart';
+
 import '../../models/user_profile.dart';
 import '../../services/profile_service.dart';
 import '../home/home_screen.dart';
@@ -97,10 +102,15 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
           });
           break;
         case 6:
-          final vh = int.parse(_veryHigh.text.trim());
-          final tmin = int.parse(_targetMin.text.trim());
-          final tmax = int.parse(_targetMax.text.trim());
-          final vl = int.parse(_veryLow.text.trim());
+          // validation already checked in validateStep, but be defensive here
+          final vh = int.tryParse(_veryHigh.text.trim());
+          final tmin = int.tryParse(_targetMin.text.trim());
+          final tmax = int.tryParse(_targetMax.text.trim());
+          final vl = int.tryParse(_veryLow.text.trim());
+          if (vh == null || tmin == null || tmax == null || vl == null) {
+            toast('errors.unexpected'.tr());
+            return;
+          }
           await svc.updatePartial(widget.uid, {
             'glucoseRanges': {
               'veryHigh': vh,
@@ -123,9 +133,9 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
     } catch (e) {
       // Show error to user
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('حدث خطأ: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${'errors.unexpected'.tr()} — $e')),
+        );
       }
     } finally {
       if (mounted) setState(() => saving = false);
@@ -140,25 +150,25 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
     switch (s) {
       case 0:
         if (_type == null) {
-          toast('الرجاء اختيار نوع السكري.');
+          toast('setup.diabetes_type'.tr());
           return false;
         }
         return true;
       case 1:
         if (_takesPills == null) {
-          toast('الرجاء اختيار نعم أو لا.');
+          toast('setup.takes_pills'.tr());
           return false;
         }
         return true;
       case 2:
         if (_insulin == null) {
-          toast('الرجاء اختيار طريقة العلاج.');
+          toast('setup.insulin_method'.tr());
           return false;
         }
         return true;
       case 3:
         if (_dob == null) {
-          toast('الرجاء اختيار تاريخ الميلاد.');
+          toast('setup.age_error'.tr());
           return false;
         }
         return true;
@@ -175,7 +185,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
             tmin < tmax &&
             vl >= 40 &&
             vh >= 150;
-        if (!ok) toast('الرجاء إدخال قيم جلوكوز صحيحة.');
+        if (!ok) toast('setup.range_error'.tr());
         return ok;
       default:
         return true;
@@ -199,7 +209,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
   Widget build(BuildContext context) {
     // Force RTL for this page and use directional paddings/alignment
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: fr.TextDirection.rtl,
       child: Builder(
         builder: (context) {
           final cs = Theme.of(context).colorScheme;
@@ -209,6 +219,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
 
           return Scaffold(
             backgroundColor: bg,
+            appBar: AppBar(title: Text('setup.title'.tr())),
             body: SafeArea(
               child: Column(
                 children: [
@@ -224,7 +235,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                         value: _progressNumerator / totalSteps,
                         minHeight: 6,
                         color: accent,
-                        backgroundColor: cs.onSurface.withValues(alpha: 0.12),
+                        backgroundColor: cs.onSurface.withOpacity(0.12),
                       ),
                     ),
                   ),
@@ -258,9 +269,11 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                                           strokeWidth: 2.4,
                                         ),
                                       )
-                                    : const Text(
-                                        'متابعة',
-                                        style: TextStyle(
+                                    : Text(
+                                        step == totalSteps - 1
+                                            ? 'setup.finish'.tr()
+                                            : 'setup.next'.tr(),
+                                        style: const TextStyle(
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
@@ -278,9 +291,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                       children: [
                         TextButton(
                           style: TextButton.styleFrom(
-                            backgroundColor: cs.onSurface.withValues(
-                              alpha: 0.06,
-                            ),
+                            backgroundColor: cs.onSurface.withOpacity(0.06),
                             shape: const StadiumBorder(),
                             foregroundColor: cs.onSurface,
                             padding: const EdgeInsets.symmetric(
@@ -289,13 +300,13 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                             ),
                           ),
                           onPressed: step == 0 ? null : onBack,
-                          child: const Text('رجوع'),
+                          child: Text('setup.back'.tr()),
                         ),
                         const Spacer(),
                         Text(
                           'الخطوة $_progressNumerator من $totalSteps •',
                           style: TextStyle(
-                            color: cs.onSurface.withValues(alpha: 0.7),
+                            color: cs.onSurface.withOpacity(0.7),
                           ),
                         ),
                       ],
@@ -314,60 +325,48 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
     switch (step) {
       case 0:
         return _section(
-          title: 'ما نوع السكري لديك؟',
-          subtitle: 'يساعدنا هذا في تقديم توصيات مخصصة لإدارة صحتك.',
+          title: 'setup.diabetes_type'.tr(),
+          subtitle: 'setup.diabetes_type'.tr(),
           children: [
             Wrap(
               spacing: 12,
               runSpacing: 12,
-              textDirection: TextDirection.rtl,
-              children: [
-                _choicePill(
-                  label: 'النوع الأول',
-                  selected: _type == DiabetesType.type1,
-                  onTap: () => setState(() => _type = DiabetesType.type1),
-                ),
-                _choicePill(
-                  label: 'النوع الثاني',
-                  selected: _type == DiabetesType.type2,
-                  onTap: () => setState(() => _type = DiabetesType.type2),
-                ),
-                _choicePill(
-                  label: 'LADA',
-                  selected: _type == DiabetesType.lada,
-                  onTap: () => setState(() => _type = DiabetesType.lada),
-                ),
-                _choicePill(
-                  label: 'النوع الثالث',
-                  selected: _type == DiabetesType.type3,
-                  onTap: () => setState(() => _type = DiabetesType.type3),
-                ),
-                _choicePill(
-                  label: 'أخرى',
-                  selected: _type == DiabetesType.other,
-                  onTap: () => setState(() => _type = DiabetesType.other),
-                ),
-              ],
+              textDirection: fr.TextDirection.rtl,
+              children: DiabetesType.values.map((t) {
+                final label = switch (t) {
+                  DiabetesType.type1 => 'setup.type1'.tr(),
+                  DiabetesType.type2 => 'setup.type2'.tr(),
+                  DiabetesType.lada => 'setup.lada'.tr(),
+                  DiabetesType.type3 => 'setup.type3'.tr(),
+                  DiabetesType.other => 'setup.other'.tr(),
+                };
+                final sel = _type == t;
+                return _choicePill(
+                  label: label,
+                  selected: sel,
+                  onTap: () => setState(() => _type = t),
+                );
+              }).toList(),
             ),
           ],
         );
       case 1:
         return _section(
-          title: 'هل تتناول أي حبوب للسكري؟',
-          subtitle: 'يساعدنا هذا في تقديم توصيات مخصصة لإدارة صحتك.',
+          title: 'setup.takes_pills'.tr(),
+          subtitle: 'setup.takes_pills'.tr(),
           children: [
             Wrap(
               spacing: 12,
               runSpacing: 12,
-              textDirection: TextDirection.rtl,
+              textDirection: fr.TextDirection.rtl,
               children: [
                 _choicePill(
-                  label: 'نعم',
+                  label: 'setup.yes'.tr(),
                   selected: _takesPills == true,
                   onTap: () => setState(() => _takesPills = true),
                 ),
                 _choicePill(
-                  label: 'لا',
+                  label: 'setup.no'.tr(),
                   selected: _takesPills == false,
                   onTap: () => setState(() => _takesPills = false),
                 ),
@@ -377,46 +376,40 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
         );
       case 2:
         return _section(
-          title: 'ما هي طريقة علاج الأنسولين لديك؟',
-          subtitle: 'يساعدنا هذا في تقديم توصيات مخصصة لإدارة صحتك.',
+          title: 'setup.insulin_method'.tr(),
+          subtitle: 'setup.insulin_method'.tr(),
           children: [
             Wrap(
               spacing: 12,
               runSpacing: 12,
-              textDirection: TextDirection.rtl,
-              children: [
-                _choicePill(
-                  label: 'قلم / حقنة',
-                  selected: _insulin == InsulinMethod.penSyringe,
-                  onTap: () =>
-                      setState(() => _insulin = InsulinMethod.penSyringe),
-                ),
-                _choicePill(
-                  label: 'مضخة',
-                  selected: _insulin == InsulinMethod.pump,
-                  onTap: () => setState(() => _insulin = InsulinMethod.pump),
-                ),
-                _choicePill(
-                  label: 'بدون',
-                  selected: _insulin == InsulinMethod.none,
-                  onTap: () => setState(() => _insulin = InsulinMethod.none),
-                ),
-              ],
+              textDirection: fr.TextDirection.rtl,
+              children: InsulinMethod.values.map((m) {
+                final label = switch (m) {
+                  InsulinMethod.penSyringe => 'setup.pen_syringe'.tr(),
+                  InsulinMethod.pump => 'setup.pump'.tr(),
+                  InsulinMethod.none => 'setup.none'.tr(),
+                };
+                final sel = _insulin == m;
+                return _choicePill(
+                  label: label,
+                  selected: sel,
+                  onTap: () => setState(() => _insulin = m),
+                );
+              }).toList(),
             ),
           ],
         );
       case 3:
         final today = DateTime.now();
-        final firstDate = DateTime(1900);
         final initial =
             _dob ?? DateTime(today.year - 30, today.month, today.day);
         return _section(
-          title: 'تاريخ الميلاد',
-          subtitle: 'يساعدنا هذا في تقديم توصيات مخصصة لإدارة صحتك.',
+          title: 'setup.age'.tr(),
+          subtitle: 'setup.age'.tr(),
           children: [
             CalendarDatePicker(
               initialDate: initial,
-              firstDate: firstDate,
+              firstDate: DateTime(1900),
               lastDate: today,
               onDateChanged: (d) => setState(() => _dob = d),
             ),
@@ -424,32 +417,34 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
         );
       case 4:
         return _section(
-          title: 'ما اسم دوائك؟',
-          subtitle: 'أدخل اسم الدواء الذي تتناوله (اختياري).',
+          title: 'setup.medication_name'.tr(),
+          subtitle: 'setup.medication_name'.tr(),
           children: [
             TextField(
               controller: _medName,
-              textDirection: TextDirection.rtl,
-              decoration: const InputDecoration(hintText: 'مثال: Metformin'),
+              textDirection: fr.TextDirection.rtl,
+              decoration: InputDecoration(
+                hintText: 'setup.medication_name'.tr(),
+              ),
             ),
           ],
         );
       case 5:
         return _section(
-          title: 'متى تتناول دواءك؟',
-          subtitle: 'اختر كل ما ينطبق.',
+          title: 'setup.medication_times'.tr(),
+          subtitle: 'setup.medication_times'.tr(),
           children: [
             Wrap(
               spacing: 12,
               runSpacing: 12,
-              textDirection: TextDirection.rtl,
+              textDirection: fr.TextDirection.rtl,
               children: MedTime.values.map((t) {
                 final label = switch (t) {
-                  MedTime.morning => 'صباحًا',
-                  MedTime.afternoon => 'ظهرًا',
-                  MedTime.evening => 'مساءً',
-                  MedTime.night => 'ليلًا',
-                  MedTime.other => 'أخرى',
+                  MedTime.morning => 'setup.time.morning'.tr(),
+                  MedTime.afternoon => 'setup.time.afternoon'.tr(),
+                  MedTime.evening => 'setup.time.evening'.tr(),
+                  MedTime.night => 'setup.time.night'.tr(),
+                  MedTime.other => 'setup.time.other'.tr(),
                 };
                 final sel = _times.contains(t);
                 return _choicePill(
@@ -471,20 +466,19 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
         );
       case 6:
         return _section(
-          title: 'ما هي حدود الجلوكوز لديك؟',
-          subtitle:
-              'عيِّن المرتفع جدًا، والمدى المستهدف، والمنخفض جدًا (mg/dL).',
+          title: 'setup.target_min'.tr(),
+          subtitle: 'setup.target_max'.tr(),
           children: [
             Row(
-              textDirection: TextDirection.rtl,
+              textDirection: fr.TextDirection.rtl,
               children: [
                 Expanded(
                   child: TextField(
                     controller: _veryHigh,
                     keyboardType: TextInputType.number,
-                    textDirection: TextDirection.rtl,
-                    decoration: const InputDecoration(
-                      labelText: 'مرتفع جدًا',
+                    textDirection: fr.TextDirection.rtl,
+                    decoration: InputDecoration(
+                      labelText: 'setup.very_high'.tr(),
                       suffixText: 'mg/dL',
                     ),
                   ),
@@ -494,9 +488,9 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                   child: TextField(
                     controller: _veryLow,
                     keyboardType: TextInputType.number,
-                    textDirection: TextDirection.rtl,
-                    decoration: const InputDecoration(
-                      labelText: 'منخفض جدًا',
+                    textDirection: fr.TextDirection.rtl,
+                    decoration: InputDecoration(
+                      labelText: 'setup.very_low'.tr(),
                       suffixText: 'mg/dL',
                     ),
                   ),
@@ -505,15 +499,15 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
             ),
             const SizedBox(height: 12),
             Row(
-              textDirection: TextDirection.rtl,
+              textDirection: fr.TextDirection.rtl,
               children: [
                 Expanded(
                   child: TextField(
                     controller: _targetMin,
                     keyboardType: TextInputType.number,
-                    textDirection: TextDirection.rtl,
-                    decoration: const InputDecoration(
-                      labelText: 'المدى المستهدف (أدنى)',
+                    textDirection: fr.TextDirection.rtl,
+                    decoration: InputDecoration(
+                      labelText: 'setup.target_min'.tr(),
                       suffixText: 'mg/dL',
                     ),
                   ),
@@ -523,9 +517,9 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                   child: TextField(
                     controller: _targetMax,
                     keyboardType: TextInputType.number,
-                    textDirection: TextDirection.rtl,
-                    decoration: const InputDecoration(
-                      labelText: 'المدى المستهدف (أعلى)',
+                    textDirection: fr.TextDirection.rtl,
+                    decoration: InputDecoration(
+                      labelText: 'setup.target_max'.tr(),
                       suffixText: 'mg/dL',
                     ),
                   ),
@@ -560,10 +554,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
       Text(
         subtitle,
         textAlign: TextAlign.right,
-        style: TextStyle(
-          fontSize: 14,
-          color: cs.onSurface.withValues(alpha: 0.7),
-        ),
+        style: TextStyle(fontSize: 14, color: cs.onSurface.withOpacity(0.7)),
       ),
       const SizedBox(height: 18),
       ...children,
@@ -582,17 +573,17 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? accent : cs.onSurface.withValues(alpha: 0.06),
+          color: selected ? accent : cs.onSurface.withOpacity(0.06),
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
             color: selected
                 ? Colors.transparent
-                : cs.onSurface.withValues(alpha: 0.12),
+                : cs.onSurface.withOpacity(0.12),
           ),
         ),
         child: Text(
           label,
-          textDirection: TextDirection.rtl,
+          textDirection: fr.TextDirection.rtl,
           style: TextStyle(
             color: selected ? Colors.white : cs.onSurface,
             fontSize: 16,

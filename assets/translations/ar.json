@@ -38,7 +38,19 @@
     "home": {
         "title": "الصفحة الرئيسية",
         "welcome": "مرحبًا بك في تطبيق سكر",
-        "logout": "تسجيل الخروج"
+        "logout": "تسجيل الخروج",
+        "edit_name_title": "تعديل الاسم",
+        "edit_name_hint": "ادخل اسمك",
+        "save": "حفظ",
+        "glucose": "الجلوكوز",
+        "meals": "الوجبات",
+        "trends": "الاتجاهات",
+        "under_construction": "قيد التطوير",
+        "nav_home": "الرئيسية",
+        "nav_glucose": "الجلوكوز",
+        "nav_meals": "الوجبات",
+        "nav_trends": "الاتجاهات",
+        "nav_profile": "الملف"
     },
     "errors": {
         "unexpected": "حدث خطأ غير متوقع"
@@ -77,5 +89,14 @@
         "very_low": "منخفض جدًا",
         "target_min": "المدى المستهدف (أدنى)",
         "target_max": "المدى المستهدف (أعلى)"
+    },
+    "profile": {
+        "title": "الملف الشخصي",
+        "logout": "تسجيل الخروج",
+        "confirm_logout": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+        "cancel": "إلغاء",
+        "name": "الاسم",
+        "email": "البريد الإلكتروني",
+        "language": "اللغة"
     }
 }

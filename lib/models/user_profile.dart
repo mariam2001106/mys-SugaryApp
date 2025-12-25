@@ -7,10 +7,10 @@ enum InsulinMethod { penSyringe, pump, none }
 enum MedTime { morning, afternoon, evening, night, other }
 
 class GlucoseRanges {
-  final int veryHigh; // mg/dL
-  final int targetMin; // mg/dL
-  final int targetMax; // mg/dL
-  final int veryLow; // mg/dL
+  final int veryHigh;
+  final int targetMin;
+  final int targetMax;
+  final int veryLow;
 
   const GlucoseRanges({
     required this.veryHigh,
@@ -39,33 +39,29 @@ class GlucoseRanges {
 
 class UserProfile {
   final String uid;
-
-  // Setup fields
+  final String? displayName;
   final DiabetesType diabetesType;
   final bool takesPills;
   final InsulinMethod insulinMethod;
-  final DateTime? dateOfBirth; // stored; age can be derived
-  final int? age; // optional cached age
+  final DateTime? dateOfBirth;
+  final int? age;
   final String? medicationName;
   final List<MedTime> medicationTimes;
   final GlucoseRanges glucoseRanges;
-
-  // Onboarding
   final bool onboardingComplete;
-  final int onboardingStep; // last completed step index (0..6)
-
-  // Metadata
+  final int onboardingStep;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   const UserProfile({
     required this.uid,
+    this.displayName,
     required this.diabetesType,
     required this.takesPills,
     required this.insulinMethod,
     required this.dateOfBirth,
     required this.age,
-    required this.medicationName,
+    this.medicationName,
     required this.medicationTimes,
     required this.glucoseRanges,
     required this.onboardingComplete,
@@ -76,6 +72,7 @@ class UserProfile {
 
   factory UserProfile.initial(String uid) => UserProfile(
     uid: uid,
+    displayName: null,
     diabetesType: DiabetesType.other,
     takesPills: false,
     insulinMethod: InsulinMethod.none,
@@ -96,6 +93,7 @@ class UserProfile {
   );
 
   Map<String, dynamic> toMap() => {
+    'displayName': displayName,
     'diabetesType': diabetesType.name,
     'takesPills': takesPills,
     'insulinMethod': insulinMethod.name,
@@ -116,6 +114,7 @@ class UserProfile {
     final d = doc.data() ?? {};
     return UserProfile(
       uid: doc.id,
+      displayName: d['displayName'] as String?,
       diabetesType: _diabetesFromString(d['diabetesType'] as String?),
       takesPills: (d['takesPills'] ?? false) as bool,
       insulinMethod: _insulinFromString(d['insulinMethod'] as String?),
@@ -132,36 +131,6 @@ class UserProfile {
       onboardingStep: (d['onboardingStep'] ?? 0) as int,
       createdAt: (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (d['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-    );
-  }
-
-  UserProfile copyWith({
-    DiabetesType? diabetesType,
-    bool? takesPills,
-    InsulinMethod? insulinMethod,
-    DateTime? dateOfBirth,
-    int? age,
-    String? medicationName,
-    List<MedTime>? medicationTimes,
-    GlucoseRanges? glucoseRanges,
-    bool? onboardingComplete,
-    int? onboardingStep,
-    DateTime? updatedAt,
-  }) {
-    return UserProfile(
-      uid: uid,
-      diabetesType: diabetesType ?? this.diabetesType,
-      takesPills: takesPills ?? this.takesPills,
-      insulinMethod: insulinMethod ?? this.insulinMethod,
-      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
-      age: age ?? this.age,
-      medicationName: medicationName ?? this.medicationName,
-      medicationTimes: medicationTimes ?? this.medicationTimes,
-      glucoseRanges: glucoseRanges ?? this.glucoseRanges,
-      onboardingComplete: onboardingComplete ?? this.onboardingComplete,
-      onboardingStep: onboardingStep ?? this.onboardingStep,
-      createdAt: createdAt,
-      updatedAt: updatedAt ?? DateTime.now(),
     );
   }
 

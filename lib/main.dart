@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
@@ -16,9 +17,21 @@ Future<void> main() async {
   await EasyLocalization.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // --- Disable Firestore local persistence (server-only mode) ---
+  // Attempt to clear any existing persistence first (safe if no listeners yet)
+  try {
+    await FirebaseFirestore.instance.clearPersistence();
+  } catch (_) {
+    // ignore - clearPersistence may throw if persistence wasn't enabled or listeners exist
+  }
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: false,
+  );
+  // ----------------------------------------------------------------
+
   runApp(
     EasyLocalization(
-      supportedLocales: const [Locale('ar')],
+      supportedLocales: const [Locale('ar'), Locale('en')],
       path: 'assets/translations',
       fallbackLocale: const Locale('ar'),
       child: const SugarApp(),

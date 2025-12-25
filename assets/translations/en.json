@@ -1,0 +1,102 @@
+{
+    "app": {
+        "title": "Sugary"
+    },
+    "sign_in": {
+        "title": "Sign in",
+        "subtitle": "Sign in to manage glucose readings easily",
+        "email": "Email",
+        "email_required": "Please enter your email",
+        "password": "Password",
+        "password_required": "Password must be at least 6 characters",
+        "toggle_password": "Show/Hide password",
+        "cta": "Sign in",
+        "forgot": "Forgot password?",
+        "no_account": "New user? Create account",
+        "or": "or"
+    },
+    "sign_up": {
+        "title": "Sign up",
+        "email": "Email",
+        "email_required": "Please enter your email",
+        "password": "Password",
+        "password_required": "Password must be at least 6 characters",
+        "confirm": "Confirm password",
+        "confirm_required": "Confirmation does not match",
+        "toggle_password": "Show/Hide password",
+        "cta": "Create account",
+        "have_account": "Already have an account? Sign in"
+    },
+    "reset": {
+        "title": "Reset password",
+        "subtitle": "Enter your email to send a reset link.",
+        "email": "Email",
+        "email_required": "Please enter your email",
+        "cta": "Send reset link",
+        "sent": "Password reset link has been sent to your email"
+    },
+    "home": {
+        "title": "Home",
+        "welcome": "Welcome to Sugary",
+        "logout": "Log out",
+        "edit_name_title": "Edit name",
+        "edit_name_hint": "Enter your name",
+        "save": "Save",
+        "glucose": "Glucose",
+        "meals": "Meals",
+        "trends": "Trends",
+        "under_construction": "Under construction",
+        "nav_home": "Home",
+        "nav_glucose": "Glucose",
+        "nav_meals": "Meals",
+        "nav_trends": "Trends",
+        "nav_profile": "Profile"
+    },
+    "errors": {
+        "unexpected": "An unexpected error occurred"
+    },
+    "setup": {
+        "title": "Health setup",
+        "next": "Next",
+        "back": "Back",
+        "finish": "Finish",
+        "age": "Age",
+        "age_error": "Enter a valid age between 1 and 120.",
+        "range_error": "Invalid range.",
+        "diabetes_type": "Diabetes type",
+        "type1": "Type 1",
+        "type2": "Type 2",
+        "lada": "LADA",
+        "type3": "Type 3",
+        "other": "Other",
+        "takes_pills": "Do you take any diabetes pills?",
+        "yes": "Yes",
+        "no": "No",
+        "insulin_method": "Which insulin method do you use?",
+        "pen_syringe": "Pen / Syringe",
+        "pump": "Pump",
+        "none": "None",
+        "medication_name": "Medication name",
+        "medication_times": "When do you take medication?",
+        "time": {
+            "morning": "Morning",
+            "afternoon": "Afternoon",
+            "evening": "Evening",
+            "night": "Night",
+            "other": "Other"
+        },
+        "very_high": "Very high",
+        "very_low": "Very low",
+        "target_min": "Target range (min)",
+        "target_max": "Target range (max)"
+    },
+    "profile": {
+        "title": "Profile",
+        "logout": "Log out",
+        "confirm_logout": "Are you sure you want to sign out?",
+        "cancel": "Cancel",
+        "name": "Name",
+        "email": "Email",
+        "language": "Language"
+    }
+}

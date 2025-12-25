@@ -7,17 +7,31 @@ class ProfileService {
   DocumentReference<Map<String, dynamic>> _userDoc(String uid) =>
       _db.collection('users').doc(uid);
 
+  /// Creates an initial profile document if missing, with defensive defaults.
   Future<void> createIfMissing(String uid) async {
     final ref = _userDoc(uid);
     final snap = await ref.get();
     if (!snap.exists) {
       final initial = UserProfile.initial(uid).toMap();
+      initial['onboardingComplete'] = false;
+      initial['onboardingStep'] = 0;
+      initial['locale'] = 'ar';
       initial['createdAt'] = FieldValue.serverTimestamp();
       initial['updatedAt'] = FieldValue.serverTimestamp();
       await ref.set(initial, SetOptions(merge: true));
-      // ignore: avoid_print
-      print('[ProfileService] Created users/$uid');
     }
+  }
+
+  /// Get the user doc (default get - with persistence disabled this is server).
+  Future<DocumentSnapshot<Map<String, dynamic>>> getUserDoc(String uid) {
+    return _userDoc(uid).get();
+  }
+
+  /// Force reading the document from the SERVER explicitly.
+  Future<DocumentSnapshot<Map<String, dynamic>>> getUserDocFromServer(
+    String uid,
+  ) {
+    return _userDoc(uid).get(GetOptions(source: Source.server));
   }
 
   Stream<UserProfile?> streamProfile(String uid) {
@@ -30,13 +44,9 @@ class ProfileService {
   Future<void> updatePartial(String uid, Map<String, dynamic> data) async {
     data['updatedAt'] = FieldValue.serverTimestamp();
     await _userDoc(uid).set(data, SetOptions(merge: true));
-    // ignore: avoid_print
-    print('[ProfileService] Updated users/$uid with: $data');
   }
 
   Future<void> completeOnboarding(String uid) async {
     await updatePartial(uid, {'onboardingComplete': true});
-    // ignore: avoid_print
-    print('[ProfileService] Completed onboarding for $uid');
   }
 }

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' as fr;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:mysugaryapp/screens/setup/personal_setup_wizerd.dart';
 import 'package:mysugaryapp/services/profile_service.dart';
@@ -30,7 +31,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  Future<void> _signUp(
+  Future<void> _handleSignUp(
     BuildContext context,
     String email,
     String password,
@@ -38,25 +39,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      final cred = await _auth.createUserWithEmail(email, password);
 
       final user = cred.user;
       if (user == null) {
-        // show error
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('errors.unexpected'.tr())));
         return;
       }
 
-      // If the auth call reports this is a new user, open wizard.
       final isNew = cred.additionalUserInfo?.isNewUser ?? false;
 
-      // Ensure profile doc exists with defaults
-      await ProfileService().createIfMissing(user.uid);
+      final svc = ProfileService();
+      await svc.createIfMissing(user.uid);
+
+      // Persist the current app locale to Firestore so it syncs across devices
+      try {
+        await svc.updatePartial(user.uid, {
+          'locale': context.locale.languageCode,
+        });
+      } catch (_) {}
 
       if (isNew) {
-        // New account -> show setup wizard immediately
         if (context.mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
@@ -65,9 +70,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
           );
         }
       } else {
-        // Not a new account (rare): fallback to sign-in logic
-        if (context.mounted)
+        if (context.mounted) {
           Navigator.of(context).pushReplacementNamed('/home');
+        }
       }
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(
@@ -82,90 +87,95 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  Future<void> _signUp() async {
+    await _handleSignUp(
+      context,
+      _emailCtrl.text.trim(),
+      _passwordCtrl.text.trim(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('sign_up.title'.tr())),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              children: [
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: 'sign_up.email'.tr(),
-                    hintText: 'example@domain.com',
+    return Directionality(
+      textDirection: fr.TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(title: Text('sign_up.title'.tr())),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                children: [
+                  const SizedBox(height: 24),
+                  TextFormField(
+                    controller: _emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: 'sign_up.email'.tr(),
+                      hintText: 'example@domain.com',
+                    ),
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? 'sign_up.email_required'.tr()
+                        : null,
                   ),
-                  validator: (v) => (v == null || v.isEmpty)
-                      ? 'sign_up.email_required'.tr()
-                      : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _passwordCtrl,
-                  obscureText: _obscure1,
-                  decoration: InputDecoration(
-                    labelText: 'sign_up.password'.tr(),
-                    suffixIcon: IconButton(
-                      onPressed: () => setState(() => _obscure1 = !_obscure1),
-                      icon: Icon(
-                        _obscure1 ? Icons.visibility : Icons.visibility_off,
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _passwordCtrl,
+                    obscureText: _obscure1,
+                    decoration: InputDecoration(
+                      labelText: 'sign_up.password'.tr(),
+                      suffixIcon: IconButton(
+                        onPressed: () => setState(() => _obscure1 = !_obscure1),
+                        icon: Icon(
+                          _obscure1 ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        tooltip: 'sign_up.toggle_password'.tr(),
                       ),
-                      tooltip: 'sign_up.toggle_password'.tr(),
+                    ),
+                    validator: (v) => (v == null || v.length < 6)
+                        ? 'sign_up.password_required'.tr()
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _confirmCtrl,
+                    obscureText: _obscure2,
+                    decoration: InputDecoration(
+                      labelText: 'sign_up.confirm'.tr(),
+                      suffixIcon: IconButton(
+                        onPressed: () => setState(() => _obscure2 = !_obscure2),
+                        icon: Icon(
+                          _obscure2 ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        tooltip: 'sign_up.toggle_password'.tr(),
+                      ),
+                    ),
+                    validator: (v) => (v != _passwordCtrl.text)
+                        ? 'sign_up.confirm_required'.tr()
+                        : null,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    height: 52,
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: _loading ? null : _signUp,
+                      child: _loading
+                          ? const CircularProgressIndicator()
+                          : Text('sign_up.cta'.tr()),
                     ),
                   ),
-                  validator: (v) => (v == null || v.length < 6)
-                      ? 'sign_up.password_required'.tr()
-                      : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _confirmCtrl,
-                  obscureText: _obscure2,
-                  decoration: InputDecoration(
-                    labelText: 'sign_up.confirm'.tr(),
-                    suffixIcon: IconButton(
-                      onPressed: () => setState(() => _obscure2 = !_obscure2),
-                      icon: Icon(
-                        _obscure2 ? Icons.visibility : Icons.visibility_off,
-                      ),
-                      tooltip: 'sign_up.toggle_password'.tr(),
-                    ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () =>
+                        Navigator.of(context).pushReplacementNamed('/signin'),
+                    child: Text('sign_up.have_account'.tr()),
                   ),
-                  validator: (v) => (v != _passwordCtrl.text)
-                      ? 'sign_up.confirm_required'.tr()
-                      : null,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  height: 52,
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _loading
-                        ? null
-                        : () => _signUp(
-                            context,
-                            _emailCtrl.text.trim(),
-                            _passwordCtrl.text,
-                          ),
-                    child: _loading
-                        ? const CircularProgressIndicator()
-                        : Text('sign_up.cta'.tr()),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () =>
-                      Navigator.of(context).pushReplacementNamed('/signin'),
-                  child: Text('sign_up.have_account'.tr()),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

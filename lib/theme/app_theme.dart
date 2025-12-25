@@ -11,33 +11,62 @@ class AppColors {
 }
 
 class AppTheme {
-  static ThemeData light() {
-    final base = ColorScheme.fromSeed(
-      seedColor: AppColors.darkBlue,
-      brightness: Brightness.light,
-    ).copyWith(
-      primary: AppColors.darkBlue,
-      onPrimary: Colors.white,
-      secondary: AppColors.darkRed,
-      onSecondary: Colors.white,
-      surface: AppColors.white,
-      onSurface: const Color(0xFF1F2937), // dark slate for good contrast
-      outline: const Color(0xFFD0D5DD),
-      surfaceContainerHighest: AppColors.white,
+  static FilledButtonThemeData _filledButtonTheme(ColorScheme cs) {
+    return FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: cs.primary,
+        foregroundColor: cs.onPrimary,
+        // Remove Size.fromHeight(52) which forces infinite width
+        // Use minWidth=0, minHeight=52; parent decides width.
+        minimumSize: const Size(0, 52),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+      ),
     );
+  }
+
+  static OutlinedButtonThemeData _outlinedButtonTheme(ColorScheme cs) {
+    return OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 52),
+        side: BorderSide(color: cs.outline),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        foregroundColor: cs.primary,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
+  static ThemeData light() {
+    final cs =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.darkBlue,
+          brightness: Brightness.light,
+        ).copyWith(
+          primary: AppColors.darkBlue,
+          onPrimary: Colors.white,
+          secondary: AppColors.darkRed,
+          onSecondary: Colors.white,
+          surface: AppColors.white,
+          onSurface: const Color(0xFF1F2937),
+          outline: const Color(0xFFD0D5DD),
+          surfaceContainerHighest: AppColors.white,
+        );
 
     final textTheme = GoogleFonts.tajawalTextTheme().apply(
-      bodyColor: base.onSurface,
-      displayColor: base.onSurface,
+      bodyColor: cs.onSurface,
+      displayColor: cs.onSurface,
     );
 
     return ThemeData(
       useMaterial3: true,
-      colorScheme: base,
-      scaffoldBackgroundColor: base.surface,
+      colorScheme: cs,
+      scaffoldBackgroundColor: cs.surface,
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
-        foregroundColor: base.onSurface,
+        foregroundColor: cs.onSurface,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: textTheme.titleLarge?.copyWith(
@@ -51,68 +80,53 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: base.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        fillColor: cs.surface,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         labelStyle: TextStyle(color: AppColors.gray),
         hintStyle: TextStyle(color: AppColors.gray.withValues(alpha: 0.7)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: base.outline),
+          borderSide: BorderSide(color: cs.outline),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: base.outline),
+          borderSide: BorderSide(color: cs.outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: base.primary, width: 1.6),
+          borderSide: BorderSide(color: cs.primary, width: 1.6),
         ),
       ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: base.primary,
-          foregroundColor: base.onPrimary,
-          minimumSize: const Size.fromHeight(52),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
-          side: BorderSide(color: base.outline),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          foregroundColor: base.primary,
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-        ),
-      ),
+      filledButtonTheme: _filledButtonTheme(cs),
+      outlinedButtonTheme: _outlinedButtonTheme(cs),
       cardTheme: CardThemeData(
         elevation: 8,
-        surfaceTintColor: base.surface,
-        color: base.surface,
+        surfaceTintColor: cs.surface,
+        color: cs.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
-      dividerTheme: DividerThemeData(
-        color: base.outline,
-        thickness: 1,
-      ),
+      dividerTheme: DividerThemeData(color: cs.outline, thickness: 1),
     );
   }
 
   static ThemeData dark() {
-    final base = ColorScheme.fromSeed(
-      seedColor: AppColors.darkBlue,
-      brightness: Brightness.dark,
-    ).copyWith(
-      primary: AppColors.darkBlue,
-      onPrimary: Colors.white,
-      secondary: AppColors.darkRed,
-      onSecondary: Colors.white, // deep blue-gray
-      surface: const Color(0xFF111827),
-      onSurface: Colors.white,
-      outline: const Color(0xFF2A3444),
-      surfaceContainerHighest: const Color(0xFF111827),
-    );
+    final cs =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.darkBlue,
+          brightness: Brightness.dark,
+        ).copyWith(
+          primary: AppColors.darkBlue,
+          onPrimary: Colors.white,
+          secondary: AppColors.darkRed,
+          onSecondary: Colors.white,
+          surface: const Color(0xFF111827),
+          onSurface: Colors.white,
+          outline: const Color(0xFF2A3444),
+          surfaceContainerHighest: const Color(0xFF111827),
+        );
 
     final textTheme = GoogleFonts.tajawalTextTheme(
       ThemeData(brightness: Brightness.dark).textTheme,
@@ -120,54 +134,43 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
-      colorScheme: base,
-      scaffoldBackgroundColor: base.surface,
+      colorScheme: cs,
+      scaffoldBackgroundColor: cs.surface,
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
-        foregroundColor: base.onSurface,
+        foregroundColor: cs.onSurface,
         elevation: 0,
         centerTitle: true,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: base.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        labelStyle: TextStyle(color: Colors.white70),
-        hintStyle: TextStyle(color: Colors.white60),
+        fillColor: cs.surface,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        labelStyle: const TextStyle(color: Colors.white70),
+        hintStyle: const TextStyle(color: Colors.white60),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: base.outline),
+          borderSide: BorderSide(color: cs.outline),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: base.outline),
+          borderSide: BorderSide(color: cs.outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: base.primary, width: 1.6),
+          borderSide: BorderSide(color: cs.primary, width: 1.6),
         ),
       ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: base.primary,
-          foregroundColor: base.onPrimary,
-          minimumSize: const Size.fromHeight(52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
-          side: BorderSide(color: base.outline),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          foregroundColor: base.onSurface,
-        ),
-      ),
+      filledButtonTheme: _filledButtonTheme(cs),
+      outlinedButtonTheme: _outlinedButtonTheme(cs),
       cardTheme: CardThemeData(
         elevation: 6,
-        surfaceTintColor: base.surface,
-        color: base.surface,
+        surfaceTintColor: cs.surface,
+        color: cs.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
     );
