@@ -1,414 +1,121 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mysugaryapp/screens/setup/personal_setup_wizerd.dart';
-import '../../services/profile_service.dart';
-import '../../models/user_profile.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/rendering.dart' as fr;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:easy_localization/easy_localization.dart';
 
-class Dashboard extends StatelessWidget {
+import 'package:mysugaryapp/models/user_profile.dart';
+import 'package:mysugaryapp/screens/meals/meals.screen.dart';
+import 'package:mysugaryapp/screens/reminders/reminders_screen.dart';
+import 'package:mysugaryapp/screens/setup/personal_setup_wizerd.dart';
+import 'package:mysugaryapp/services/profile_service.dart';
+
+class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
 
-Future<void> _showEditNameDialog(BuildContext context, String uid) async {
-  final ctrl = TextEditingController(text: FirebaseAuth.instance.currentUser?.displayName ?? '');
-  await showDialog<void>(
-    context: context,
-    builder: (ctx) => Directionality(
-      textDirection: context.locale.languageCode == 'ar' ? fr.TextDirection.rtl : fr.TextDirection.ltr,
-      child: AlertDialog(
-        title: Text('home.edit_name_title'.tr(), textAlign: TextAlign.right),
-        content: TextField(
-          controller: ctrl,
-          textDirection: fr.TextDirection.rtl,
-          decoration: InputDecoration(hintText: 'home.edit_name_hint'.tr()),
-        ),
-        actions: [
-          ButtonBar(
-            alignment: MainAxisAlignment.end,
-            children: [
-              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text('profile.cancel'.tr())),
-              ElevatedButton(
-                onPressed: () async {
-                  final newName = ctrl.text.trim();
-                  if (newName.isEmpty) return;
-                  final user = FirebaseAuth.instance.currentUser;
-                  if (user != null) {
-                    await user.updateDisplayName(newName);
-                  }
-                  try {
-                    await ProfileService().updatePartial(uid, {'displayName': newName});
-                  } catch (_) {}
-                  if (ctx.mounted) Navigator.of(ctx).pop();
-                },
-                child: Text('home.save'.tr()),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
+  @override
+  State<Dashboard> createState() => _DashboardState();
 }
 
-  Widget _card(
-    BuildContext context, {
+class _DashboardState extends State<Dashboard> {
+
+  Future<void> _toggleLocale() async {
+    final current = context.locale.languageCode;
+    final next = current == 'ar' ? const Locale('en') : const Locale('ar');
+    try {
+      await context.setLocale(next);
+    } catch (_) {}
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        await ProfileService().updatePartial(user.uid, {
+          'locale': next.languageCode,
+        });
+      } catch (_) {}
+    }
+    if (mounted) setState(() {});
+  }
+
+  Widget _metricCard({
     required IconData icon,
     required Color color,
     required String title,
     required String subtitle,
-    VoidCallback? onTap,
     bool filled = false,
   }) {
     final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: filled ? cs.surfaceContainerHighest : cs.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: cs.onSurface.withOpacity(.04)),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: filled ? cs.surfaceContainerHighest : cs.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: cs.onSurface.withValues(alpha: 0.12),
+          width: 1,
         ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: color.withOpacity(.12),
-              child: Icon(icon, color: color),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: cs.onSurface.withOpacity(.8),
-                      fontSize: 13,
-                    ),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: color.withValues(alpha: 0.12),
+            child: Icon(icon, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: cs.onSurface.withValues(alpha: 0.65),
+                    fontSize: 13,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: cs.onSurface,
-                      fontWeight: FontWeight.w700,
-                    ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w700,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _quickAction(
-    BuildContext context, {
+  Widget _quickActionButton({
     required IconData icon,
-    required String label,
     required Color color,
+    required String label,
     required VoidCallback onTap,
   }) {
     final cs = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton(
-        onPressed: onTap,
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: cs.onSurface.withOpacity(.06)),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: TextStyle(
-                color: cs.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
+    return OutlinedButton(
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        side: BorderSide(color: cs.onSurface.withValues(alpha: 0.12), width: 1),
+        minimumSize: const Size.fromHeight(44),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    final authUser = FirebaseAuth.instance.currentUser;
-    final cs = Theme.of(context).colorScheme;
-
-    if (uid == null) {
-      return Directionality(
-        textDirection: fr.TextDirection.rtl,
-        child: Scaffold(body: Center(child: Text('غير مسجل الدخول'))),
-      );
-    }
-
-    final svc = ProfileService();
-
-    return Directionality(
-      textDirection: fr.TextDirection.rtl,
-      child: StreamBuilder<UserProfile?>(
-        stream: svc.streamProfile(uid),
-        builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-          if (snap.hasError) {
-            return Scaffold(
-              body: Center(child: Text('حدث خطأ: ${snap.error}')),
-            );
-          }
-
-          final profile = snap.data;
-          if (profile == null || !profile.onboardingComplete) {
-            return Scaffold(
-              appBar: AppBar(title: const Text('الرئيسية'), centerTitle: true),
-              body: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 28),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.quiz_outlined, size: 72),
-                      const SizedBox(height: 14),
-                      const Text(
-                        'أكمل إعداد حسابك',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'يجب عليك إكمال بعض الأسئلة لتقديم تجربة مخصصة. اضغط للبدء.',
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 18),
-                      ElevatedButton(
-                        onPressed: () => Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (_) => PersonalSetupWizard(uid: uid),
-                          ),
-                        ),
-                        child: const Text('ابدأ الإعداد'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }
-
-          final displayNameFallback =
-              authUser?.displayName?.trim().isNotEmpty == true
-              ? authUser!.displayName!.trim()
-              : (authUser?.email != null
-                    ? authUser!.email!.split('@')[0]
-                    : 'المستخدم');
-
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('الصفحة الرئيسية'),
-              centerTitle: true,
-              elevation: 0,
-              backgroundColor: Colors.transparent,
-              foregroundColor: cs.onSurface,
-            ),
-            body: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 18,
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 900),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'مرحبًا، $displayNameFallback',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: cs.onSurface,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'نظرة عامة على الصحة',
-                                  style: TextStyle(
-                                    color: cs.onSurface.withOpacity(.6),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: 'تعديل الاسم',
-                            onPressed: () => _showEditNameDialog(context, uid),
-                            icon: Icon(Icons.edit, color: cs.onSurface),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      Column(
-                        children: [
-                          _card(
-                            context,
-                            icon: Icons.bloodtype,
-                            color: Colors.red.shade600,
-                            title: 'أحدث قراءة',
-                            subtitle: 'لا توجد قراءات',
-                            onTap: () {},
-                          ),
-                          const SizedBox(height: 12),
-                          _card(
-                            context,
-                            icon: Icons.trending_up,
-                            color: cs.primary,
-                            title: 'المتوسط الأسبوعي',
-                            subtitle: 'لا توجد بيانات',
-                            onTap: () {},
-                          ),
-                          const SizedBox(height: 12),
-                          _card(
-                            context,
-                            icon: Icons.restaurant,
-                            color: Colors.green.shade600,
-                            title: 'وجبات اليوم',
-                            subtitle: '0 وجبات',
-                            onTap: () {},
-                          ),
-                          const SizedBox(height: 12),
-                          _card(
-                            context,
-                            icon: Icons.calculate_outlined,
-                            color: cs.primary.withOpacity(.9),
-                            title: 'تقدير A1C',
-                            subtitle: 'لا توجد بيانات',
-                            filled: true,
-                            onTap: () {},
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(14),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                'إجراءات سريعة',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: cs.onSurface,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              _quickAction(
-                                context,
-                                icon: Icons.bloodtype,
-                                label: 'إضافة قراءة جلوكوز',
-                                color: Colors.red.shade600,
-                                onTap: () =>
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('إضافة قراءة'),
-                                      ),
-                                    ),
-                              ),
-                              const SizedBox(height: 12),
-                              _quickAction(
-                                context,
-                                icon: Icons.restaurant,
-                                label: 'إضافة وجبة',
-                                color: Colors.green.shade600,
-                                onTap: () =>
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('إضافة وجبة'),
-                                      ),
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(14),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                'الحساب',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: cs.onSurface,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              _rowItem('الاسم', displayNameFallback),
-                              _rowItem('نوع السكري', profile.diabetesType.name),
-                              _rowItem(
-                                'حالة الإعداد',
-                                profile.onboardingComplete
-                                    ? 'مكتمل'
-                                    : 'غير مكتمل',
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'نصائح',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: cs.onSurface,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                '- اضغط على "إضافة قراءة جلوكوز" لتسجيل مستوى الجلوكوز',
-                                style: TextStyle(
-                                  color: cs.onSurface.withOpacity(.7),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
+      onPressed: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
     );
   }
@@ -425,8 +132,413 @@ Future<void> _showEditNameDialog(BuildContext context, String uid) async {
             ),
           ),
           const SizedBox(width: 12),
-          Text(value, textAlign: TextAlign.right),
+          Text(
+            value,
+            textAlign: Directionality.of(context) == fr.TextDirection.rtl
+                ? TextAlign.right
+                : TextAlign.left,
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _onboardingPrompt(BuildContext context, String uid) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('الرئيسية'), centerTitle: true),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.quiz_outlined, size: 72),
+              const SizedBox(height: 14),
+              const Text(
+                'أكمل إعداد حسابك',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'يجب عليك إكمال بعض الأسئلة لتقديم تجربة مخصصة. اضغط للبدء.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 18),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => PersonalSetupWizard(uid: uid),
+                  ),
+                ),
+                child: const Text('ابدأ الإعداد'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _emptyStateCard() {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: cs.onSurface.withValues(alpha: 0.16),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 4),
+          Icon(
+            Icons.monitor_heart_outlined,
+            size: 44,
+            color: cs.onSurface.withValues(alpha: 0.6),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'home.empty_glucose_title'.tr(),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'home.empty_glucose_subtitle'.tr(),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: cs.onSurface.withValues(alpha: 0.65),
+              fontSize: 13.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('home.quick_add_glucose'.tr())),
+            ),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(44),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            icon: const Icon(Icons.bloodtype, size: 18),
+            label: Text('home.empty_glucose_cta'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final authUser = FirebaseAuth.instance.currentUser;
+    final cs = Theme.of(context).colorScheme;
+
+    if (uid == null) {
+      return Directionality(
+        textDirection: context.locale.languageCode == 'ar'
+            ? fr.TextDirection.rtl
+            : fr.TextDirection.ltr,
+        child: const Scaffold(body: Center(child: Text('غير مسجل الدخول'))),
+      );
+    }
+
+    final svc = ProfileService();
+
+    return Directionality(
+      textDirection: context.locale.languageCode == 'ar'
+          ? fr.TextDirection.rtl
+          : fr.TextDirection.ltr,
+      child: StreamBuilder<UserProfile?>(
+        stream: svc.streamProfile(uid),
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          if (snap.hasError) {
+            return Scaffold(
+              body: Center(child: Text('حدث خطأ: ${snap.error}')),
+            );
+          }
+
+          final profile = snap.data;
+          if (profile == null || !profile.onboardingComplete) {
+            return _onboardingPrompt(context, uid);
+          }
+
+          final displayNameFallback =
+              (authUser?.displayName?.trim().isNotEmpty == true)
+              ? authUser!.displayName!.trim()
+              : (authUser?.email != null
+                    ? authUser!.email!.split('@')[0]
+                    : 'المستخدم');
+
+          return Scaffold(
+            backgroundColor: cs.surface,
+            body: SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 18,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header with name + controls
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                RichText(
+                                  text: TextSpan(
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w800,
+                                      color: cs.onSurface,
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text:
+                                            '${'home.welcome'.tr()}, $displayNameFallback ',
+                                      ),
+                                      const WidgetSpan(
+                                        child: Padding(
+                                          padding: EdgeInsets.only(left: 2),
+                                          child: Text(
+                                            '👋',
+                                            style: TextStyle(fontSize: 20),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'home.health_overview'.tr(),
+                                  style: TextStyle(
+                                    color: cs.onSurface.withValues(alpha: 0.65),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              // Theme toggle placeholder button (visual only)
+                              _iconSquare(
+                                icon:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Icons.dark_mode
+                                    : Icons.wb_sunny_outlined,
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Toggle theme (hook needed)',
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              // Language toggle
+                              _iconSquare(
+                                icon: Icons.language,
+                                onTap: _toggleLocale,
+                              ),
+                              const SizedBox(width: 8),
+                              // Notifications icon -> Reminders screen
+                              _iconSquare(
+                                icon: Icons.notifications_outlined,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const RemindersScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Metrics cards in order: Latest, Weekly, Meals, A1C
+                      _metricCard(
+                        icon: Icons.bloodtype_outlined,
+                        color: Colors.red.shade600,
+                        title: 'home.latest_reading_title'.tr(),
+                        subtitle: 'home.latest_reading_none'.tr(),
+                      ),
+                      const SizedBox(height: 12),
+                      _metricCard(
+                        icon: Icons.trending_up,
+                        color: cs.primary,
+                        title: 'home.weekly_average_title'.tr(),
+                        subtitle: 'home.weekly_average_none'.tr(),
+                      ),
+                      const SizedBox(height: 12),
+                      _metricCard(
+                        icon: Icons.lunch_dining,
+                        color: Colors.green.shade600,
+                        title: 'home.todays_meals_title'.tr(),
+                        subtitle: 'home.todays_meals_value'
+                            .tr(), // e.g., "0 meals"
+                      ),
+                      const SizedBox(height: 12),
+                      _metricCard(
+                        icon: Icons.calculate_outlined,
+                        color: cs.primary,
+                        title: 'home.estimated_a1c_title'.tr(),
+                        subtitle: 'home.estimated_a1c_none'.tr(),
+                        filled: true,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Quick actions block centered
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: cs.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: cs.onSurface.withValues(alpha: 0.1),
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.show_chart, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'home.quick_title'.tr(),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: cs.onSurface,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: [
+                                _quickActionButton(
+                                  icon: Icons.bloodtype,
+                                  color: Colors.red.shade600,
+                                  label: 'home.quick_add_glucose'.tr(),
+                                  onTap: () => ScaffoldMessenger.of(context)
+                                      .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'home.quick_add_glucose'.tr(),
+                                          ),
+                                        ),
+                                      ),
+                                ),
+                                _quickActionButton(
+                                  icon: Icons.lunch_dining,
+                                  color: Colors.green.shade600,
+                                  label: 'home.quick_add_meal'.tr(),
+                                  onTap: () => ScaffoldMessenger.of(context)
+                                      .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'home.quick_add_meal'.tr(),
+                                          ),
+                                        ),
+                                      ),
+                                ),
+                                _quickActionButton(
+                                  icon: Icons.insights,
+                                  color: Colors.blue.shade600,
+                                  label: 'home.quick_view_trends'.tr(),
+                                  onTap: () => ScaffoldMessenger.of(context)
+                                      .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'home.quick_view_trends'.tr(),
+                                          ),
+                                        ),
+                                      ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                    builder: (_) => const MealsScreen(),
+                                    ),
+                                  );
+                                  },
+                                  child: Text('meals.screen'.tr()),
+                                ),
+                                
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Empty state CTA
+                      _emptyStateCard(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _iconSquare({required IconData icon, required VoidCallback onTap}) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: cs.onSurface.withValues(alpha: 0.12)),
+        ),
+        child: Icon(icon, size: 18, color: cs.onSurface),
       ),
     );
   }

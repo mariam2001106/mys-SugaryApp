@@ -43,7 +43,7 @@ dependencies:
   firebase_messaging: ^14.9.4
 
   # Local notifications
-  flutter_local_notifications: ^19.4.2
+  flutter_local_notifications: ^19.5.0
 
   # State & localization
   provider: ^6.0.5
@@ -60,6 +60,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: 
   
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -85,7 +86,13 @@ flutter:
     - assets/translations/ar.json
     - assets/translations/en.json
     - assets/images/logo.png
-   
+  
+flutter_icons:
+    android: true
+    ios: true
+    image_path: assets/images/logo.png
+    adaptive_icon_background: "#ffffff"
+    adaptive_icon_foreground: assets/images/1024.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

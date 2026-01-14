@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// Using default text themes to avoid runtime font fetching.
+// You can re-enable GoogleFonts after bundling fonts locally.
 
 class AppColors {
   // Brand palette
@@ -55,10 +56,9 @@ class AppTheme {
           surfaceContainerHighest: AppColors.white,
         );
 
-    final textTheme = GoogleFonts.tajawalTextTheme().apply(
-      bodyColor: cs.onSurface,
-      displayColor: cs.onSurface,
-    );
+    final textTheme = ThemeData(
+      brightness: Brightness.light,
+    ).textTheme.apply(bodyColor: cs.onSurface, displayColor: cs.onSurface);
 
     return ThemeData(
       useMaterial3: true,
@@ -128,9 +128,7 @@ class AppTheme {
           surfaceContainerHighest: const Color(0xFF111827),
         );
 
-    final textTheme = GoogleFonts.tajawalTextTheme(
-      ThemeData(brightness: Brightness.dark).textTheme,
-    );
+    final textTheme = ThemeData(brightness: Brightness.dark).textTheme;
 
     return ThemeData(
       useMaterial3: true,

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' as fr;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mysugaryapp/services/profile_service.dart';
-import 'package:mysugaryapp/screens/profile/profile_screen.dart';
 import 'dashboard.dart';
-import 'package:flutter/rendering.dart' as fr;
+import 'package:mysugaryapp/screens/profile/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,10 +15,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  // Provide ALL tabs here, including ProfileScreen.
   late final List<Widget> _pages = const [
     Dashboard(),
-    _PlaceholderPage(titleKey: 'home.glucose'), // use translation keys
+    _PlaceholderPage(titleKey: 'home.glucose'),
     _PlaceholderPage(titleKey: 'home.meals'),
     _PlaceholderPage(titleKey: 'home.trends'),
     ProfileScreen(),
@@ -31,27 +29,6 @@ class _HomeScreenState extends State<HomeScreen> {
     await FirebaseAuth.instance.signOut();
   }
 
-  // Toggle locale between Arabic and English and persist to Firestore (users/<uid>.locale)
-  Future<void> _toggleLocale() async {
-    final current = context.locale.languageCode;
-    final next = current == 'ar' ? const Locale('en') : const Locale('ar');
-
-    try {
-      await context.setLocale(next);
-    } catch (_) {}
-
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      try {
-        await ProfileService().updatePartial(user.uid, {
-          'locale': next.languageCode,
-        });
-      } catch (_) {}
-    }
-    // Rebuild to reflect new direction and labels
-    if (mounted) setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -60,40 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Directionality(
       textDirection: isArabic ? fr.TextDirection.rtl : fr.TextDirection.ltr,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(isArabic ? 'home.title'.tr() : 'home.title'.tr()),
-          centerTitle: true,
-          actions: [
-            // Language switch: Arabic <-> English
-            Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    isArabic ? 'العربية' : 'Arabic',
-                    style: TextStyle(
-                      color: cs.onSurface.withValues(alpha: 0.8),
-                    ),
-                  ),
-                ),
-                Switch(
-                  value: !isArabic, // ON means English
-                  onChanged: (_) => _toggleLocale(),
-                  activeColor: cs.primary,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    isArabic ? 'إنجليزي' : 'English',
-                    style: TextStyle(
-                      color: cs.onSurface.withValues(alpha: 0.8),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+        appBar: AppBar(title: Text('home.title'.tr()), centerTitle: true),
         body: SafeArea(child: _pages[_currentIndex]),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,

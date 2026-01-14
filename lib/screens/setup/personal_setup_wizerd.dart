@@ -207,9 +207,11 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
 
   @override
   Widget build(BuildContext context) {
-    // Force RTL for this page and use directional paddings/alignment
+    // Dynamic text direction based on locale (RTL for Arabic, LTR otherwise)
     return Directionality(
-      textDirection: fr.TextDirection.rtl,
+      textDirection: context.locale.languageCode == 'ar'
+          ? fr.TextDirection.rtl
+          : fr.TextDirection.ltr,
       child: Builder(
         builder: (context) {
           final cs = Theme.of(context).colorScheme;
@@ -331,7 +333,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
             Wrap(
               spacing: 12,
               runSpacing: 12,
-              textDirection: fr.TextDirection.rtl,
+              textDirection: Directionality.of(context),
               children: DiabetesType.values.map((t) {
                 final label = switch (t) {
                   DiabetesType.type1 => 'setup.type1'.tr(),
@@ -358,7 +360,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
             Wrap(
               spacing: 12,
               runSpacing: 12,
-              textDirection: fr.TextDirection.rtl,
+              textDirection: Directionality.of(context),
               children: [
                 _choicePill(
                   label: 'setup.yes'.tr(),
@@ -382,7 +384,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
             Wrap(
               spacing: 12,
               runSpacing: 12,
-              textDirection: fr.TextDirection.rtl,
+              textDirection: Directionality.of(context),
               children: InsulinMethod.values.map((m) {
                 final label = switch (m) {
                   InsulinMethod.penSyringe => 'setup.pen_syringe'.tr(),
@@ -422,7 +424,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
           children: [
             TextField(
               controller: _medName,
-              textDirection: fr.TextDirection.rtl,
+              textDirection: Directionality.of(context),
               decoration: InputDecoration(
                 hintText: 'setup.medication_name'.tr(),
               ),
@@ -437,7 +439,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
             Wrap(
               spacing: 12,
               runSpacing: 12,
-              textDirection: fr.TextDirection.rtl,
+              textDirection: Directionality.of(context),
               children: MedTime.values.map((t) {
                 final label = switch (t) {
                   MedTime.morning => 'setup.time.morning'.tr(),
@@ -470,13 +472,13 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
           subtitle: 'setup.target_max'.tr(),
           children: [
             Row(
-              textDirection: fr.TextDirection.rtl,
+              textDirection: Directionality.of(context),
               children: [
                 Expanded(
                   child: TextField(
                     controller: _veryHigh,
                     keyboardType: TextInputType.number,
-                    textDirection: fr.TextDirection.rtl,
+                    textDirection: Directionality.of(context),
                     decoration: InputDecoration(
                       labelText: 'setup.very_high'.tr(),
                       suffixText: 'mg/dL',
@@ -488,7 +490,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                   child: TextField(
                     controller: _veryLow,
                     keyboardType: TextInputType.number,
-                    textDirection: fr.TextDirection.rtl,
+                    textDirection: Directionality.of(context),
                     decoration: InputDecoration(
                       labelText: 'setup.very_low'.tr(),
                       suffixText: 'mg/dL',
@@ -499,13 +501,13 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
             ),
             const SizedBox(height: 12),
             Row(
-              textDirection: fr.TextDirection.rtl,
+              textDirection: Directionality.of(context),
               children: [
                 Expanded(
                   child: TextField(
                     controller: _targetMin,
                     keyboardType: TextInputType.number,
-                    textDirection: fr.TextDirection.rtl,
+                    textDirection: Directionality.of(context),
                     decoration: InputDecoration(
                       labelText: 'setup.target_min'.tr(),
                       suffixText: 'mg/dL',
@@ -517,7 +519,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                   child: TextField(
                     controller: _targetMax,
                     keyboardType: TextInputType.number,
-                    textDirection: fr.TextDirection.rtl,
+                    textDirection: Directionality.of(context),
                     decoration: InputDecoration(
                       labelText: 'setup.target_max'.tr(),
                       suffixText: 'mg/dL',
@@ -543,7 +545,9 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
       const SizedBox(height: 10),
       Text(
         title,
-        textAlign: TextAlign.right,
+        textAlign: Directionality.of(context) == fr.TextDirection.rtl
+            ? TextAlign.right
+            : TextAlign.left,
         style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w800,
@@ -553,7 +557,9 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
       const SizedBox(height: 8),
       Text(
         subtitle,
-        textAlign: TextAlign.right,
+        textAlign: Directionality.of(context) == fr.TextDirection.rtl
+            ? TextAlign.right
+            : TextAlign.left,
         style: TextStyle(fontSize: 14, color: cs.onSurface.withOpacity(0.7)),
       ),
       const SizedBox(height: 18),
@@ -583,7 +589,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
         ),
         child: Text(
           label,
-          textDirection: fr.TextDirection.rtl,
+          textDirection: Directionality.of(context),
           style: TextStyle(
             color: selected ? Colors.white : cs.onSurface,
             fontSize: 16,

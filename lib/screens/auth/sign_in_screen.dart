@@ -75,7 +75,6 @@ class _SignInScreenState extends State<SignInScreen> {
           }
           return;
         } else {
-
           if (mounted) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (_) => PersonalSetupWizard(uid: uid)),
@@ -112,7 +111,9 @@ class _SignInScreenState extends State<SignInScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Directionality(
-      textDirection: fr.TextDirection.rtl,
+      textDirection: context.locale.languageCode == 'ar'
+          ? fr.TextDirection.rtl
+          : fr.TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(title: Text('sign_in.title'.tr())),
         body: SafeArea(

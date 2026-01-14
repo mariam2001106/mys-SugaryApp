@@ -49,7 +49,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: fr.TextDirection.rtl,
+      textDirection: context.locale.languageCode == 'ar'
+          ? fr.TextDirection.rtl
+          : fr.TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(title: Text('reset.title'.tr())),
         body: SafeArea(

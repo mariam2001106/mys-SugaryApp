@@ -19,7 +19,7 @@ class ProfileScreen extends StatelessWidget {
           title: Text('profile.logout'.tr()),
           content: Text('profile.confirm_logout'.tr()),
           actions: [
-            ButtonBar(
+            OverflowBar(
               alignment: MainAxisAlignment.end,
               children: [
                 TextButton(

@@ -98,7 +98,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: fr.TextDirection.rtl,
+      textDirection: context.locale.languageCode == 'ar'
+          ? fr.TextDirection.rtl
+          : fr.TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(title: Text('sign_up.title'.tr())),
         body: SafeArea(

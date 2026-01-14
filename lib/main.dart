@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:mysugaryapp/api/firebase_api.dart';
+import 'package:mysugaryapp/screens/reminders/reminders_screen.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 
@@ -11,11 +13,17 @@ import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/reset_password_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
+final navigatorkey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await FirebaseApi().intNotification();
+
+  // Disable GoogleFonts runtime fetching to avoid network dependencies
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   // --- Disable Firestore local persistence (server-only mode) ---
   // Attempt to clear any existing persistence first (safe if no listeners yet)
@@ -54,11 +62,13 @@ class SugarApp extends StatelessWidget {
       darkTheme: AppTheme.dark(),
       themeMode: ThemeMode.system,
       home: const AuthGate(),
+      navigatorKey: navigatorkey,
       routes: {
         '/signin': (_) => const SignInScreen(),
         '/signup': (_) => const SignUpScreen(),
         '/reset': (_) => const ResetPasswordScreen(),
         '/home': (_) => const HomeScreen(),
+        '/remainders': (_) => const RemindersScreen(),
       },
     );
   }
