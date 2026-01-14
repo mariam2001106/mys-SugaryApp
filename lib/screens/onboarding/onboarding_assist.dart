@@ -31,6 +31,10 @@ class _SmartAssistState extends State<SmartAssist> {
   ColorScheme get cs => Theme.of(context).colorScheme;
   ThemeData get theme => Theme.of(context);
 
+  /// Convert TimeOfDay to HH:mm format (machine-friendly, locale-independent)
+  String _formatHHmm(TimeOfDay t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
   Future<void> _completeAndClose() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
@@ -57,7 +61,7 @@ class _SmartAssistState extends State<SmartAssist> {
         MedicationReminder(
           name: medName.trim(),
           unit: medUnit.trim(),
-          time: medTime!.format(context),
+          time: _formatHHmm(medTime!), // Use HH:mm format
         ),
       );
       setState(() => step = 1);
@@ -86,7 +90,7 @@ class _SmartAssistState extends State<SmartAssist> {
           .map(
             (g) => GlucoseCheckReminder(
               label: (g['label'] as String).trim(),
-              time: (g['time'] as TimeOfDay).format(context),
+              time: _formatHHmm(g['time'] as TimeOfDay), // Use HH:mm format
             ),
           )
           .toList();
