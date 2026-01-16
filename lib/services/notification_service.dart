@@ -69,24 +69,22 @@ class NotificationService {
   int _idForReminder(ReminderItemDto r) => r.id.hashCode & 0x7fffffff;
 
   /// Gets the Android notification details configuration for reminders.
-  AndroidNotificationDetails _getNotificationDetails() {
-    return const AndroidNotificationDetails(
-      'reminders_channel',
-      'Reminders',
-      channelDescription: 'Time-based reminders',
-      importance: Importance.max,
-      priority: Priority.high,
-      // Enable these to ensure notification shows even when app is closed
-      playSound: true,
-      enableVibration: true,
-      enableLights: true,
-      // Show notification even when device is locked
-      visibility: NotificationVisibility.public,
-      // Important: ensures notification persists
-      ongoing: false,
-      autoCancel: true,
-    );
-  }
+  static const AndroidNotificationDetails _notificationDetails = AndroidNotificationDetails(
+    'reminders_channel',
+    'Reminders',
+    channelDescription: 'Time-based reminders',
+    importance: Importance.max,
+    priority: Priority.high,
+    // Enable these to ensure notification shows even when app is closed
+    playSound: true,
+    enableVibration: true,
+    enableLights: true,
+    // Show notification even when device is locked
+    visibility: NotificationVisibility.public,
+    // Important: ensures notification persists
+    ongoing: false,
+    autoCancel: true,
+  );
 
   /// Schedules a daily notification at the reminder’s time if it’s enabled.
   Future<void> scheduleReminder(ReminderItemDto r) async {
@@ -109,13 +107,12 @@ class NotificationService {
       r.title,
       '${r.frequency} • ${r.time}',
       scheduled,
-      NotificationDetails(
-        android: _getNotificationDetails(),
+      const NotificationDetails(
+        android: _notificationDetails,
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time, // repeat daily
       payload: r.id,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
