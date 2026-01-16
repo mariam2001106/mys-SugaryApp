@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart' as fr;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mysugaryapp/models/reminder_models.dart';
+import 'package:mysugaryapp/services/notification_service.dart';
 import 'package:mysugaryapp/services/reminder_service.dart';
 
 class RemindersScreen extends StatefulWidget {
@@ -16,6 +17,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _svc = ReminderService();
+
+  //notifaer handling
+  final _notifier = NotificationService.instance;
 
   ReminderType? _type;
   TimeOfDay? _time;
@@ -38,6 +42,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
     super.dispose();
   }
 
+  // Load reminders from Firestore
   Future<void> _load() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
@@ -45,6 +50,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
       return;
     }
     final items = await _svc.listReminders(uid);
+    await _notifier.rescheduleAll(items); // schedule all enabled
     if (!mounted) return;
     setState(() {
       _uid = uid;
@@ -97,9 +103,10 @@ class _RemindersScreenState extends State<RemindersScreen> {
     return null;
   }
 
+  // Format TimeOfDay to "HH:mm"
   String _formatHHmm(TimeOfDay t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
-
+  // Show time picker dialog
   Future<void> _pickTime() async {
     final picked = await showTimePicker(
       context: context,
@@ -107,7 +114,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
     );
     if (picked != null) setState(() => _time = picked);
   }
-
+  // Reset form inputs
   void _resetForm() {
     _editingIndex = null;
     _type = null;
@@ -116,7 +123,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
     _titleCtrl.clear();
     setState(() {});
   }
-
+  // Start editing a reminder
   void _startEdit(int index) {
     final r = _items[index];
     _editingIndex = index;
@@ -126,18 +133,19 @@ class _RemindersScreenState extends State<RemindersScreen> {
     _titleCtrl.text = r.title;
     setState(() {});
   }
-
+  // Delete a reminder
   Future<void> _deleteItem(int index) async {
     if (_uid == null) return;
-    final id = _items[index].id;
-    await _svc.deleteReminder(_uid!, id);
+    final r = _items[index];
+    await _svc.deleteReminder(_uid!, r.id);
+    await _notifier.cancelReminder(r); // cancel notif
     if (!mounted) return;
     setState(() {
       _items.removeAt(index);
       if (_editingIndex == index) _resetForm();
     });
   }
-
+  // Add or update reminder based on form inputs
   Future<void> _addOrUpdateReminder() async {
     if (_uid == null) return;
     if (!_formKey.currentState!.validate()) return;
@@ -159,29 +167,33 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
     if (_editingIndex == null) {
       final newId = await _svc.addReminder(_uid!, dto);
+      final created = dto.copyWith(id: newId);
+      await _notifier.scheduleReminder(created); // schedule new
       if (!mounted) return;
-      setState(() {
-        _items.add(dto.copyWith(id: newId));
-      });
+      setState(() => _items.add(created));
     } else {
       await _svc.updateReminder(_uid!, dto);
+      await _notifier.cancelReminder(_items[_editingIndex!]); // cancel old
+      await _notifier.scheduleReminder(dto); // schedule updated
       if (!mounted) return;
-      setState(() {
-        _items[_editingIndex!] = dto;
-      });
+      setState(() => _items[_editingIndex!] = dto);
     }
     _resetForm();
   }
 
+  // Toggle enabled/disabled state of a reminder
   Future<void> _toggleEnabled(int index, bool value) async {
     if (_uid == null) return;
     final curr = _items[index];
     final updated = curr.copyWith(enabled: value);
     await _svc.updateReminder(_uid!, updated);
+    if (value) {
+      await _notifier.scheduleReminder(updated);
+    } else {
+      await _notifier.cancelReminder(curr);
+    }
     if (!mounted) return;
-    setState(() {
-      _items[index] = updated;
-    });
+    setState(() => _items[index] = updated);
   }
 
   @override
@@ -369,7 +381,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
                                       Expanded(
                                         child: Text(
                                           _time == null
-                                              ? 'reminders.time_placeholder'.tr()
+                                              ? 'reminders.time_placeholder'
+                                                    .tr()
                                               : _time!.format(context),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -542,58 +555,67 @@ class _RemindersScreenState extends State<RemindersScreen> {
                                           const SizedBox(width: 8),
                                           Flexible(
                                             child: Wrap(
-                                            spacing: 4,
-                                            runSpacing: 4,
-                                            crossAxisAlignment:
-                                                WrapCrossAlignment.center,
-                                            children: [
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 4,
+                                              spacing: 4,
+                                              runSpacing: 4,
+                                              crossAxisAlignment:
+                                                  WrapCrossAlignment.center,
+                                              children: [
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: cs.surface,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          10,
+                                                        ),
+                                                    border: Border.all(
+                                                      color: cs.onSurface
+                                                          .withValues(
+                                                            alpha: 0.1,
+                                                          ),
                                                     ),
-                                                decoration: BoxDecoration(
-                                                  color: cs.surface,
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                  border: Border.all(
-                                                    color: cs.onSurface
-                                                        .withValues(alpha: 0.1),
+                                                  ),
+                                                  child: Text(
+                                                    _typeLabel(typeEnum),
+                                                    style: TextStyle(
+                                                      color: cs.onSurface
+                                                          .withValues(
+                                                            alpha: 0.8,
+                                                          ),
+                                                      fontSize: 12,
+                                                    ),
                                                   ),
                                                 ),
-                                                child: Text(
-                                                  _typeLabel(typeEnum),
-                                                  style: TextStyle(
-                                                    color: cs.onSurface
-                                                        .withValues(alpha: 0.8),
-                                                    fontSize: 12,
+                                                Switch(
+                                                  value: r.enabled,
+                                                  onChanged: (v) =>
+                                                      _toggleEnabled(i, v),
+                                                ),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.edit,
+                                                    size: 20,
                                                   ),
+                                                  tooltip: 'reminders.edit'
+                                                      .tr(),
+                                                  onPressed: () =>
+                                                      _startEdit(i),
                                                 ),
-                                              ),
-                                              Switch(
-                                                value: r.enabled,
-                                                onChanged: (v) =>
-                                                    _toggleEnabled(i, v),
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(
-                                                  Icons.edit,
-                                                  size: 20,
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.delete_outline,
+                                                    size: 20,
+                                                  ),
+                                                  tooltip: 'reminders.delete'
+                                                      .tr(),
+                                                  onPressed: () =>
+                                                      _deleteItem(i),
                                                 ),
-                                                tooltip: 'reminders.edit'.tr(),
-                                                onPressed: () => _startEdit(i),
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(
-                                                  Icons.delete_outline,
-                                                  size: 20,
-                                                ),
-                                                tooltip: 'reminders.delete'
-                                                    .tr(),
-                                                onPressed: () => _deleteItem(i),
-                                              ),
-                                            ],
+                                              ],
                                             ),
                                           ),
                                         ],

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:mysugaryapp/api/firebase_api.dart';
+import 'package:easy_localization/easy_localization.dart'
+    show BuildContextEasyLocalizationExtension, EasyLocalization;
 import 'package:mysugaryapp/screens/reminders/reminders_screen.dart';
+import 'package:mysugaryapp/services/notification_service.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 
@@ -19,8 +20,12 @@ final navigatorkey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
+
+  // Initialize Firebase before any Firebase usage
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await FirebaseApi().intNotification();
+
+  // Initializes local notification engine for time-based reminders.
+  await NotificationService.instance.init();
 
   // Disable GoogleFonts runtime fetching to avoid network dependencies
   GoogleFonts.config.allowRuntimeFetching = false;
@@ -35,6 +40,7 @@ Future<void> main() async {
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: false,
   );
+
   // ----------------------------------------------------------------
 
   runApp(
