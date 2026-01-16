@@ -121,4 +121,17 @@ class NotificationService {
       await scheduleReminder(r);
     }
   }
+
+  /// Gets the list of all pending notification requests (for debugging).
+  Future<List<PendingNotificationRequest>> getPendingNotifications() async {
+    if (!_initialized) return [];
+    return await _plugin.pendingNotificationRequests();
+  }
+
+  /// Checks if exact alarms permission is granted (Android 12+).
+  Future<bool?> canScheduleExactAlarms() async {
+    return await _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.canScheduleExactNotifications();
+  }
 }
