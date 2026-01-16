@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:mysugaryapp/models/reminder_models.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzdata;
+import 'package:flutter/foundation.dart';
 
 /// Handles all local notification scheduling/canceling for reminders (Android-only).
 class NotificationService {
@@ -15,26 +16,46 @@ class NotificationService {
   Future<void> init() async {
     if (_initialized) return;
 
-    // Timezone setup (uses device local zone from the tz database).
-    tzdata.initializeTimeZones();
-    // tz.local is set from the environment; override with tz.setLocalLocation(...) if needed.
+    try {
+      // Timezone setup (uses device local zone from the tz database).
+      tzdata.initializeTimeZones();
+      
+      // Explicitly set the local timezone
+      // This ensures notifications are scheduled correctly based on device timezone
+      final String timeZoneName = DateTime.now().timeZoneName;
+      try {
+        tz.setLocalLocation(tz.getLocation(timeZoneName));
+      } catch (e) {
+        // If timezone name is not found, fallback to UTC
+        debugPrint('Could not set timezone $timeZoneName, falling back to UTC: $e');
+        tz.setLocalLocation(tz.UTC);
+      }
 
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const initSettings = InitializationSettings(android: androidInit);
+      const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const initSettings = InitializationSettings(android: androidInit);
 
-    await _plugin.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: (resp) {
-        //TODO: navigate to reminders screen using navigatorKey if desired.
-      },
-    );
+      await _plugin.initialize(
+        initSettings,
+        onDidReceiveNotificationResponse: (resp) {
+          //TODO: navigate to reminders screen using navigatorKey if desired.
+        },
+      );
 
-    // Android 13+ notification permission.
-    await _plugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
+      // Android 13+ notification permission.
+      await _plugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestNotificationsPermission();
 
-    _initialized = true;
+      // Request exact alarm permission for Android 12+
+      await _plugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestExactAlarmsPermission();
+
+      _initialized = true;
+    } catch (e) {
+      debugPrint('Error initializing notification service: $e');
+      rethrow;
+    }
   }
 
   /// Generates a stable integer ID for a reminder, used by the scheduler.
@@ -61,18 +82,28 @@ class NotificationService {
       r.title,
       '${r.frequency} • ${r.time}',
       scheduled,
-      const NotificationDetails(
+      NotificationDetails(
         android: AndroidNotificationDetails(
           'reminders_channel',
           'Reminders',
           channelDescription: 'Time-based reminders',
           importance: Importance.max,
           priority: Priority.high,
+          // Enable these to ensure notification shows even when app is closed
+          playSound: true,
+          enableVibration: true,
+          enableLights: true,
+          // Show notification even when device is locked
+          visibility: NotificationVisibility.public,
+          // Important: ensures notification persists
+          ongoing: false,
+          autoCancel: true,
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time, // repeat daily
       payload: r.id,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
