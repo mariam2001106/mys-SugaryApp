@@ -22,13 +22,20 @@ class NotificationService {
       
       // Explicitly set the local timezone
       // This ensures notifications are scheduled correctly based on device timezone
-      final String timeZoneName = DateTime.now().timeZoneName;
       try {
-        tz.setLocalLocation(tz.getLocation(timeZoneName));
+        // Try to get the local timezone from the tz package
+        final location = tz.local;
+        tz.setLocalLocation(location);
       } catch (e) {
-        // If timezone name is not found, fallback to UTC
-        debugPrint('Could not set timezone $timeZoneName, falling back to UTC: $e');
-        tz.setLocalLocation(tz.UTC);
+        // If that fails, try using the device timezone name
+        try {
+          final String timeZoneName = DateTime.now().timeZoneName;
+          tz.setLocalLocation(tz.getLocation(timeZoneName));
+        } catch (e2) {
+          // Last resort: fallback to UTC
+          debugPrint('Could not determine local timezone, falling back to UTC: $e2');
+          tz.setLocalLocation(tz.UTC);
+        }
       }
 
       const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -83,22 +90,7 @@ class NotificationService {
       '${r.frequency} • ${r.time}',
       scheduled,
       NotificationDetails(
-        android: AndroidNotificationDetails(
-          'reminders_channel',
-          'Reminders',
-          channelDescription: 'Time-based reminders',
-          importance: Importance.max,
-          priority: Priority.high,
-          // Enable these to ensure notification shows even when app is closed
-          playSound: true,
-          enableVibration: true,
-          enableLights: true,
-          // Show notification even when device is locked
-          visibility: NotificationVisibility.public,
-          // Important: ensures notification persists
-          ongoing: false,
-          autoCancel: true,
-        ),
+        android: _getNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time, // repeat daily
