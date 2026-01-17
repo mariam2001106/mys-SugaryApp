@@ -17,7 +17,14 @@ class NotificationService {
 
     // Timezone setup (uses device local zone from the tz database).
     tzdata.initializeTimeZones();
-    // tz.local is set from the environment; override with tz.setLocalLocation(...) if needed.
+    // Set the local timezone explicitly - this is critical for scheduling to work
+    final locationName = DateTime.now().timeZoneName;
+    try {
+      tz.setLocalLocation(tz.getLocation(locationName));
+    } catch (e) {
+      // Fallback to UTC if the timezone name is not found
+      tz.setLocalLocation(tz.getLocation('UTC'));
+    }
 
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: androidInit);
@@ -30,9 +37,16 @@ class NotificationService {
     );
 
     // Android 13+ notification permission.
-    await _plugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
+    final androidImpl = _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    
+    if (androidImpl != null) {
+      await androidImpl.requestNotificationsPermission();
+      
+      // Request exact alarm permission for Android 12+ (API 31+)
+      // This is critical for scheduled notifications to work
+      await androidImpl.requestExactAlarmsPermission();
+    }
 
     _initialized = true;
   }
