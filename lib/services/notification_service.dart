@@ -11,13 +11,77 @@ class NotificationService {
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
+  // Common timezone locations for efficient lookup when device has non-standard offset
+  // Covers major regions globally for better timezone detection
+  static const _commonTimezoneLocations = [
+    'America/New_York',
+    'America/Chicago',
+    'America/Denver',
+    'America/Los_Angeles',
+    'America/Sao_Paulo',
+    'Europe/London',
+    'Europe/Paris',
+    'Africa/Cairo',
+    'Asia/Dubai',
+    'Asia/Kolkata',
+    'Asia/Shanghai',
+    'Asia/Tokyo',
+    'Australia/Sydney',
+    'Pacific/Auckland',
+  ];
+
   /// Initializes the local notifications plugin, time zones, and Android permissions.
   Future<void> init() async {
     if (_initialized) return;
 
     // Timezone setup (uses device local zone from the tz database).
     tzdata.initializeTimeZones();
-    // tz.local is set from the environment; override with tz.setLocalLocation(...) if needed.
+    
+    // Set the local timezone explicitly - this is critical for scheduling to work
+    // Use the device's current timezone offset to find the appropriate location
+    final now = DateTime.now();
+    final offset = now.timeZoneOffset;
+    
+    try {
+      final offsetHours = offset.inHours;
+      // Get absolute minutes component (works for both + and - offsets)
+      // Examples: 330 min (UTC+5:30) -> 30 min, -330 min (UTC-5:30) -> 30 min
+      // We only use this to check if it's a whole hour offset
+      final offsetMinutes = offset.inMinutes.abs() % 60;
+      
+      if (offsetHours == 0 && offsetMinutes == 0) {
+        tz.setLocalLocation(tz.getLocation('UTC'));
+      } else if (offsetMinutes == 0) {
+        // Simple hour offset - use Etc/GMT timezone
+        _setTimezoneFromHourOffset(offsetHours);
+      } else {
+        // For complex offsets with minutes, find a matching location
+        // Look through common timezone locations first (more efficient)
+        tz.Location? matchingLocation;
+        for (final locationName in _commonTimezoneLocations) {
+          try {
+            final location = tz.getLocation(locationName);
+            final time = tz.TZDateTime.now(location);
+            if (time.timeZoneOffset == offset) {
+              matchingLocation = location;
+              break;
+            }
+          } catch (_) {
+            continue;
+          }
+        }
+        
+        if (matchingLocation != null) {
+          tz.setLocalLocation(matchingLocation);
+        } else {
+          // Fallback to nearest hour offset
+          _setTimezoneFromHourOffset(offsetHours);
+        }
+      }
+    } catch (e) {
+      // Ultimate fallback: use UTC
+      tz.setLocalLocation(tz.getLocation('UTC'));
+    }
 
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: androidInit);
@@ -30,11 +94,34 @@ class NotificationService {
     );
 
     // Android 13+ notification permission.
-    await _plugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
+    final androidImpl = _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    
+    if (androidImpl != null) {
+      await androidImpl.requestNotificationsPermission();
+      
+      // Request exact alarm permission for Android 12+ (API 31+)
+      // This is critical for scheduled notifications to work
+      await androidImpl.requestExactAlarmsPermission();
+    }
 
     _initialized = true;
+  }
+
+  // Helper method to set timezone from hour offset using Etc/GMT notation
+  // Note: Etc/GMT timezones have reversed signs from standard notation:
+  // - Etc/GMT+X represents UTC-X (west of GMT)
+  // - Etc/GMT-X represents UTC+X (east of GMT)
+  // offsetHours: The timezone offset in hours from UTC
+  //              (e.g., +5 for UTC+5 which becomes Etc/GMT-5)
+  void _setTimezoneFromHourOffset(int offsetHours) {
+    if (offsetHours > 0) {
+      tz.setLocalLocation(tz.getLocation('Etc/GMT-$offsetHours'));
+    } else if (offsetHours < 0) {
+      tz.setLocalLocation(tz.getLocation('Etc/GMT+${-offsetHours}'));
+    } else {
+      tz.setLocalLocation(tz.getLocation('UTC'));
+    }
   }
 
   /// Generates a stable integer ID for a reminder, used by the scheduler.
