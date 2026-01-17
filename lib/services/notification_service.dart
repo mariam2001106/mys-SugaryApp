@@ -17,12 +17,45 @@ class NotificationService {
 
     // Timezone setup (uses device local zone from the tz database).
     tzdata.initializeTimeZones();
+    
     // Set the local timezone explicitly - this is critical for scheduling to work
-    final locationName = DateTime.now().timeZoneName;
+    // Use the device's current timezone offset to find the appropriate location
+    final now = DateTime.now();
+    final offset = now.timeZoneOffset;
+    
     try {
-      tz.setLocalLocation(tz.getLocation(locationName));
+      // Try to find a timezone location that matches the device's offset
+      // This approach works for most cases
+      final offsetHours = offset.inHours;
+      final offsetMinutes = offset.inMinutes % 60;
+      
+      // Look through all available locations to find one matching the offset
+      final locations = tz.timeZoneDatabase.locations.values;
+      tz.Location? matchingLocation;
+      
+      for (final location in locations) {
+        final time = tz.TZDateTime.now(location);
+        if (time.timeZoneOffset == offset) {
+          matchingLocation = location;
+          break;
+        }
+      }
+      
+      if (matchingLocation != null) {
+        tz.setLocalLocation(matchingLocation);
+      } else {
+        // Fallback: construct timezone name from offset
+        // Note: Etc/GMT timezones have reversed signs
+        if (offsetHours == 0 && offsetMinutes == 0) {
+          tz.setLocalLocation(tz.getLocation('UTC'));
+        } else if (offsetHours > 0) {
+          tz.setLocalLocation(tz.getLocation('Etc/GMT-$offsetHours'));
+        } else {
+          tz.setLocalLocation(tz.getLocation('Etc/GMT+${-offsetHours}'));
+        }
+      }
     } catch (e) {
-      // Fallback to UTC if the timezone name is not found
+      // Ultimate fallback: use UTC
       tz.setLocalLocation(tz.getLocation('UTC'));
     }
 
