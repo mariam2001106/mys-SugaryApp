@@ -24,34 +24,54 @@ class NotificationService {
     final offset = now.timeZoneOffset;
     
     try {
-      // Try to find a timezone location that matches the device's offset
-      // This approach works for most cases
+      // Fallback: construct timezone name from offset
+      // Note: Etc/GMT timezones have reversed signs
       final offsetHours = offset.inHours;
-      final offsetMinutes = offset.inMinutes % 60;
+      final offsetMinutes = offset.inMinutes.abs() % 60;
       
-      // Look through all available locations to find one matching the offset
-      final locations = tz.timeZoneDatabase.locations.values;
-      tz.Location? matchingLocation;
-      
-      for (final location in locations) {
-        final time = tz.TZDateTime.now(location);
-        if (time.timeZoneOffset == offset) {
-          matchingLocation = location;
-          break;
-        }
-      }
-      
-      if (matchingLocation != null) {
-        tz.setLocalLocation(matchingLocation);
-      } else {
-        // Fallback: construct timezone name from offset
-        // Note: Etc/GMT timezones have reversed signs
-        if (offsetHours == 0 && offsetMinutes == 0) {
-          tz.setLocalLocation(tz.getLocation('UTC'));
-        } else if (offsetHours > 0) {
+      if (offsetHours == 0 && offsetMinutes == 0) {
+        tz.setLocalLocation(tz.getLocation('UTC'));
+      } else if (offsetMinutes == 0) {
+        // Simple hour offset - use Etc/GMT timezone
+        if (offsetHours > 0) {
           tz.setLocalLocation(tz.getLocation('Etc/GMT-$offsetHours'));
         } else {
           tz.setLocalLocation(tz.getLocation('Etc/GMT+${-offsetHours}'));
+        }
+      } else {
+        // For complex offsets with minutes, find a matching location
+        // Look through common timezone locations first (more efficient)
+        final commonLocations = [
+          'America/New_York', 'America/Chicago', 'America/Denver', 
+          'America/Los_Angeles', 'Europe/London', 'Europe/Paris',
+          'Asia/Dubai', 'Asia/Kolkata', 'Asia/Tokyo', 'Australia/Sydney',
+        ];
+        
+        tz.Location? matchingLocation;
+        for (final locationName in commonLocations) {
+          try {
+            final location = tz.getLocation(locationName);
+            final time = tz.TZDateTime.now(location);
+            if (time.timeZoneOffset == offset) {
+              matchingLocation = location;
+              break;
+            }
+          } catch (_) {
+            continue;
+          }
+        }
+        
+        if (matchingLocation != null) {
+          tz.setLocalLocation(matchingLocation);
+        } else {
+          // Fallback to nearest hour offset
+          if (offsetHours > 0) {
+            tz.setLocalLocation(tz.getLocation('Etc/GMT-$offsetHours'));
+          } else if (offsetHours < 0) {
+            tz.setLocalLocation(tz.getLocation('Etc/GMT+${-offsetHours}'));
+          } else {
+            tz.setLocalLocation(tz.getLocation('UTC'));
+          }
         }
       }
     } catch (e) {
