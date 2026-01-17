@@ -14,10 +14,20 @@ class NotificationService {
   // Common timezone locations for efficient lookup when device has non-standard offset
   // Covers major regions globally for better timezone detection
   static const _commonTimezoneLocations = [
-    'America/New_York', 'America/Chicago', 'America/Denver', 
-    'America/Los_Angeles', 'America/Sao_Paulo', 'Europe/London', 
-    'Europe/Paris', 'Africa/Cairo', 'Asia/Dubai', 'Asia/Kolkata', 
-    'Asia/Shanghai', 'Asia/Tokyo', 'Australia/Sydney', 'Pacific/Auckland',
+    'America/New_York',
+    'America/Chicago',
+    'America/Denver',
+    'America/Los_Angeles',
+    'America/Sao_Paulo',
+    'Europe/London',
+    'Europe/Paris',
+    'Africa/Cairo',
+    'Asia/Dubai',
+    'Asia/Kolkata',
+    'Asia/Shanghai',
+    'Asia/Tokyo',
+    'Australia/Sydney',
+    'Pacific/Auckland',
   ];
 
   /// Initializes the local notifications plugin, time zones, and Android permissions.
@@ -34,6 +44,8 @@ class NotificationService {
     
     try {
       final offsetHours = offset.inHours;
+      // Get absolute value of minutes component (e.g., -330 min -> -30 min -> 30 min)
+      // We only use this to check if it's a whole hour offset
       final offsetMinutes = (offset.inMinutes % 60).abs();
       
       if (offsetHours == 0 && offsetMinutes == 0) {
@@ -96,7 +108,12 @@ class NotificationService {
   }
 
   /// Helper method to set timezone from hour offset using Etc/GMT notation
-  /// Note: Etc/GMT timezones have reversed signs (GMT+X means UTC-X)
+  /// 
+  /// Note: Etc/GMT timezones have reversed signs from standard notation:
+  /// - Etc/GMT+X represents UTC-X (west of GMT)
+  /// - Etc/GMT-X represents UTC+X (east of GMT)
+  /// 
+  /// [offsetHours] The timezone offset in hours from UTC (e.g., +5 for UTC+5)
   void _setTimezoneFromHourOffset(int offsetHours) {
     if (offsetHours > 0) {
       tz.setLocalLocation(tz.getLocation('Etc/GMT-$offsetHours'));
