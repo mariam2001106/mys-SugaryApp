@@ -44,9 +44,9 @@ class NotificationService {
     
     try {
       final offsetHours = offset.inHours;
-      // Get absolute value of minutes component (e.g., -330 min -> 30 min)
+      // Get absolute minutes component (e.g., -330 min -> 30 min, 270 min -> 30 min)
       // We only use this to check if it's a whole hour offset
-      final offsetMinutes = (offset.inMinutes % 60).abs();
+      final offsetMinutes = offset.inMinutes.abs() % 60;
       
       if (offsetHours == 0 && offsetMinutes == 0) {
         tz.setLocalLocation(tz.getLocation('UTC'));
