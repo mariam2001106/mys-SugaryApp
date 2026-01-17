@@ -44,7 +44,8 @@ class NotificationService {
     
     try {
       final offsetHours = offset.inHours;
-      // Get absolute minutes component (e.g., 330 min (UTC+5:30) -> 30 min, -330 min (UTC-5:30) -> 30 min)
+      // Get absolute minutes component (works for both + and - offsets)
+      // Examples: 330 min (UTC+5:30) -> 30 min, -330 min (UTC-5:30) -> 30 min
       // We only use this to check if it's a whole hour offset
       final offsetMinutes = offset.inMinutes.abs() % 60;
       
