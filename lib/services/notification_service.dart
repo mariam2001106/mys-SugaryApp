@@ -12,10 +12,12 @@ class NotificationService {
   bool _initialized = false;
 
   // Common timezone locations for efficient lookup when device has non-standard offset
+  // Covers major regions globally for better timezone detection
   static const _commonTimezoneLocations = [
     'America/New_York', 'America/Chicago', 'America/Denver', 
-    'America/Los_Angeles', 'Europe/London', 'Europe/Paris',
-    'Asia/Dubai', 'Asia/Kolkata', 'Asia/Tokyo', 'Australia/Sydney',
+    'America/Los_Angeles', 'America/Sao_Paulo', 'Europe/London', 
+    'Europe/Paris', 'Africa/Cairo', 'Asia/Dubai', 'Asia/Kolkata', 
+    'Asia/Shanghai', 'Asia/Tokyo', 'Australia/Sydney', 'Pacific/Auckland',
   ];
 
   /// Initializes the local notifications plugin, time zones, and Android permissions.
@@ -31,8 +33,6 @@ class NotificationService {
     final offset = now.timeZoneOffset;
     
     try {
-      // Fallback: construct timezone name from offset
-      // Note: Etc/GMT timezones have reversed signs
       final offsetHours = offset.inHours;
       final offsetMinutes = (offset.inMinutes % 60).abs();
       
@@ -40,11 +40,7 @@ class NotificationService {
         tz.setLocalLocation(tz.getLocation('UTC'));
       } else if (offsetMinutes == 0) {
         // Simple hour offset - use Etc/GMT timezone
-        if (offsetHours > 0) {
-          tz.setLocalLocation(tz.getLocation('Etc/GMT-$offsetHours'));
-        } else {
-          tz.setLocalLocation(tz.getLocation('Etc/GMT+${-offsetHours}'));
-        }
+        _setTimezoneFromHourOffset(offsetHours);
       } else {
         // For complex offsets with minutes, find a matching location
         // Look through common timezone locations first (more efficient)
@@ -66,13 +62,7 @@ class NotificationService {
           tz.setLocalLocation(matchingLocation);
         } else {
           // Fallback to nearest hour offset
-          if (offsetHours > 0) {
-            tz.setLocalLocation(tz.getLocation('Etc/GMT-$offsetHours'));
-          } else if (offsetHours < 0) {
-            tz.setLocalLocation(tz.getLocation('Etc/GMT+${-offsetHours}'));
-          } else {
-            tz.setLocalLocation(tz.getLocation('UTC'));
-          }
+          _setTimezoneFromHourOffset(offsetHours);
         }
       }
     } catch (e) {
@@ -103,6 +93,18 @@ class NotificationService {
     }
 
     _initialized = true;
+  }
+
+  /// Helper method to set timezone from hour offset using Etc/GMT notation
+  /// Note: Etc/GMT timezones have reversed signs (GMT+X means UTC-X)
+  void _setTimezoneFromHourOffset(int offsetHours) {
+    if (offsetHours > 0) {
+      tz.setLocalLocation(tz.getLocation('Etc/GMT-$offsetHours'));
+    } else if (offsetHours < 0) {
+      tz.setLocalLocation(tz.getLocation('Etc/GMT+${-offsetHours}'));
+    } else {
+      tz.setLocalLocation(tz.getLocation('UTC'));
+    }
   }
 
   /// Generates a stable integer ID for a reminder, used by the scheduler.
