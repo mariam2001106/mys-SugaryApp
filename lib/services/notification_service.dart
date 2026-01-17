@@ -44,7 +44,7 @@ class NotificationService {
     
     try {
       final offsetHours = offset.inHours;
-      // Get absolute minutes component (e.g., -330 min -> 30 min, 270 min -> 30 min)
+      // Get absolute minutes component (e.g., 330 min (UTC+5:30) -> 30 min, -330 min (UTC-5:30) -> 30 min)
       // We only use this to check if it's a whole hour offset
       final offsetMinutes = offset.inMinutes.abs() % 60;
       
@@ -111,7 +111,8 @@ class NotificationService {
   // Note: Etc/GMT timezones have reversed signs from standard notation:
   // - Etc/GMT+X represents UTC-X (west of GMT)
   // - Etc/GMT-X represents UTC+X (east of GMT)
-  // offsetHours: The timezone offset in hours from UTC (e.g., +5 for UTC+5)
+  // offsetHours: The timezone offset in hours from UTC
+  //              (e.g., +5 for UTC+5 which becomes Etc/GMT-5)
   void _setTimezoneFromHourOffset(int offsetHours) {
     if (offsetHours > 0) {
       tz.setLocalLocation(tz.getLocation('Etc/GMT-$offsetHours'));
