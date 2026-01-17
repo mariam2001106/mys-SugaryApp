@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 import 'package:mysugaryapp/models/user_profile.dart';
-import 'package:mysugaryapp/screens/meals/meals.screen.dart';
 import 'package:mysugaryapp/screens/reminders/reminders_screen.dart';
 import 'package:mysugaryapp/screens/setup/personal_setup_wizerd.dart';
 import 'package:mysugaryapp/services/profile_service.dart';
@@ -493,17 +492,6 @@ class _DashboardState extends State<Dashboard> {
                                         ),
                                       ),
                                 ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                    builder: (_) => const MealsScreen(),
-                                    ),
-                                  );
-                                  },
-                                  child: Text('meals.screen'.tr()),
-                                ),
-                                
                               ],
                             ),
                           ],

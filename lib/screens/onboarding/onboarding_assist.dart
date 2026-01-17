@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mysugaryapp/models/medicationreminder_model.dart';
+import 'package:mysugaryapp/models/reminder_models.dart';
+import 'package:mysugaryapp/services/notification_service.dart';
 import 'package:mysugaryapp/services/reminder_service.dart';
 
 class SmartAssist extends StatefulWidget {
@@ -14,6 +16,8 @@ class SmartAssist extends StatefulWidget {
 
 class _SmartAssistState extends State<SmartAssist> {
   final ReminderService svc = ReminderService();
+  final _notificationService = NotificationService.instance;
+  static const _dailyFrequencyKey = 'reminders.freq_daily';
 
   int step = 0;
   bool saving = false;
@@ -34,6 +38,52 @@ class _SmartAssistState extends State<SmartAssist> {
   /// Convert TimeOfDay to HH:mm format (machine-friendly, locale-independent)
   String _formatHHmm(TimeOfDay t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
+  String _medicationReminderTitle() {
+    final medication = medName.trim();
+    final unit = medUnit.trim();
+    if (medication.isEmpty) return 'reminders.type_medication'.tr();
+    if (unit.isEmpty) return medication;
+    return '$medication ($unit)';
+  }
+
+  String _glucoseReminderTitle(String label) {
+    final trimmed = label.trim();
+    return trimmed.isEmpty ? 'reminders.type_glucose'.tr() : trimmed;
+  }
+
+  Future<void> _scheduleMedicationReminder(String uid) async {
+    final time = medTime;
+    if (time == null) return;
+    final dto = ReminderItemDto(
+      id: '',
+      type: ReminderType.medication,
+      title: _medicationReminderTitle(),
+      time: _formatHHmm(time),
+      frequency: _dailyFrequencyKey,
+      enabled: true,
+    );
+    final reminderId = await svc.addReminder(uid, dto);
+    await _notificationService.scheduleReminder(dto.copyWith(id: reminderId));
+  }
+
+  Future<void> _scheduleGlucoseReminders(
+    String uid,
+    List<GlucoseCheckReminder> reminders,
+  ) async {
+    for (final reminder in reminders) {
+      final dto = ReminderItemDto(
+        id: '',
+        type: ReminderType.glucose,
+        title: _glucoseReminderTitle(reminder.label),
+        time: reminder.time,
+        frequency: _dailyFrequencyKey,
+        enabled: true,
+      );
+      final reminderId = await svc.addReminder(uid, dto);
+      await _notificationService.scheduleReminder(dto.copyWith(id: reminderId));
+    }
+  }
 
   Future<void> _completeAndClose() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -64,6 +114,7 @@ class _SmartAssistState extends State<SmartAssist> {
           time: _formatHHmm(medTime!), // Use HH:mm format
         ),
       );
+      await _scheduleMedicationReminder(uid);
       setState(() => step = 1);
     } finally {
       if (mounted) setState(() => saving = false);
@@ -95,6 +146,7 @@ class _SmartAssistState extends State<SmartAssist> {
           )
           .toList();
       await svc.setGlucoseReminders(uid, list);
+      await _scheduleGlucoseReminders(uid, list);
       await svc.setSmartAssistComplete(uid, value: true);
       widget.onFinished();
     } finally {
