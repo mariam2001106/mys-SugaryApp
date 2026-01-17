@@ -11,6 +11,13 @@ class NotificationService {
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
+  // Common timezone locations for efficient lookup when device has non-standard offset
+  static const _commonTimezoneLocations = [
+    'America/New_York', 'America/Chicago', 'America/Denver', 
+    'America/Los_Angeles', 'Europe/London', 'Europe/Paris',
+    'Asia/Dubai', 'Asia/Kolkata', 'Asia/Tokyo', 'Australia/Sydney',
+  ];
+
   /// Initializes the local notifications plugin, time zones, and Android permissions.
   Future<void> init() async {
     if (_initialized) return;
@@ -27,7 +34,7 @@ class NotificationService {
       // Fallback: construct timezone name from offset
       // Note: Etc/GMT timezones have reversed signs
       final offsetHours = offset.inHours;
-      final offsetMinutes = offset.inMinutes.abs() % 60;
+      final offsetMinutes = (offset.inMinutes % 60).abs();
       
       if (offsetHours == 0 && offsetMinutes == 0) {
         tz.setLocalLocation(tz.getLocation('UTC'));
@@ -41,14 +48,8 @@ class NotificationService {
       } else {
         // For complex offsets with minutes, find a matching location
         // Look through common timezone locations first (more efficient)
-        final commonLocations = [
-          'America/New_York', 'America/Chicago', 'America/Denver', 
-          'America/Los_Angeles', 'Europe/London', 'Europe/Paris',
-          'Asia/Dubai', 'Asia/Kolkata', 'Asia/Tokyo', 'Australia/Sydney',
-        ];
-        
         tz.Location? matchingLocation;
-        for (final locationName in commonLocations) {
+        for (final locationName in _commonTimezoneLocations) {
           try {
             final location = tz.getLocation(locationName);
             final time = tz.TZDateTime.now(location);
