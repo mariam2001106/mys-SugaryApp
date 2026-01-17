@@ -17,8 +17,6 @@ class _RemindersScreenState extends State<RemindersScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _svc = ReminderService();
-
-  //notifaer handling
   final _notifier = NotificationService.instance;
 
   ReminderType? _type;
@@ -50,6 +48,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
       return;
     }
     final items = await _svc.listReminders(uid);
+    print('[ReminderScreen] load/reschedule count=${items.length}');
     await _notifier.rescheduleAll(items); // schedule all enabled
     if (!mounted) return;
     setState(() {
@@ -106,6 +105,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
   // Format TimeOfDay to "HH:mm"
   String _formatHHmm(TimeOfDay t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
   // Show time picker dialog
   Future<void> _pickTime() async {
     final picked = await showTimePicker(
@@ -114,6 +114,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
     );
     if (picked != null) setState(() => _time = picked);
   }
+
   // Reset form inputs
   void _resetForm() {
     _editingIndex = null;
@@ -123,6 +124,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
     _titleCtrl.clear();
     setState(() {});
   }
+
   // Start editing a reminder
   void _startEdit(int index) {
     final r = _items[index];
@@ -133,10 +135,12 @@ class _RemindersScreenState extends State<RemindersScreen> {
     _titleCtrl.text = r.title;
     setState(() {});
   }
+
   // Delete a reminder
   Future<void> _deleteItem(int index) async {
     if (_uid == null) return;
     final r = _items[index];
+    print('[ReminderScreen] delete title=${r.title} time=${r.time}');
     await _svc.deleteReminder(_uid!, r.id);
     await _notifier.cancelReminder(r); // cancel notif
     if (!mounted) return;
@@ -145,6 +149,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
       if (_editingIndex == index) _resetForm();
     });
   }
+
   // Add or update reminder based on form inputs
   Future<void> _addOrUpdateReminder() async {
     if (_uid == null) return;
@@ -166,12 +171,14 @@ class _RemindersScreenState extends State<RemindersScreen> {
     );
 
     if (_editingIndex == null) {
+      print('[ReminderScreen] add title=${dto.title} time=${dto.time}');
       final newId = await _svc.addReminder(_uid!, dto);
       final created = dto.copyWith(id: newId);
       await _notifier.scheduleReminder(created); // schedule new
       if (!mounted) return;
       setState(() => _items.add(created));
     } else {
+      print('[ReminderScreen] update title=${dto.title} time=${dto.time}');
       await _svc.updateReminder(_uid!, dto);
       await _notifier.cancelReminder(_items[_editingIndex!]); // cancel old
       await _notifier.scheduleReminder(dto); // schedule updated
@@ -186,6 +193,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
     if (_uid == null) return;
     final curr = _items[index];
     final updated = curr.copyWith(enabled: value);
+    print(
+      '[ReminderScreen] toggle title=${curr.title} time=${curr.time} -> $value',
+    );
     await _svc.updateReminder(_uid!, updated);
     if (value) {
       await _notifier.scheduleReminder(updated);
@@ -222,6 +232,33 @@ class _RemindersScreenState extends State<RemindersScreen> {
               ),
             ],
           ),
+          actions: [
+            // Debug button: schedules a notification ~1 minute from now
+            IconButton(
+              icon: const Icon(Icons.bug_report),
+              onPressed: () async {
+                final now = TimeOfDay.now();
+                final dto = ReminderItemDto(
+                  id: 'debug-id',
+                  type: ReminderType.medication,
+                  title: 'Debug Reminder',
+                  time: _formatHHmm(
+                    TimeOfDay(hour: now.hour, minute: (now.minute + 1) % 60),
+                  ),
+                  frequency: 'reminders.freq_daily',
+                  enabled: true,
+                );
+                print(
+                  '[ReminderScreen] debug button scheduling ${dto.title} at ${dto.time}',
+                );
+                await _notifier.scheduleReminder(dto);
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Debug reminder in ~1 minute')),
+                );
+              },
+            ),
+          ],
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(24),
             child: Padding(
