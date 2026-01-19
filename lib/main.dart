@@ -3,7 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart'
     show BuildContextEasyLocalizationExtension, EasyLocalization;
+import 'package:mysugaryapp/screens/glucose/glucose_screen.dart';
 import 'package:mysugaryapp/screens/reminders/reminders_screen.dart';
+import 'package:mysugaryapp/screens/trends/a1c_calculator_screen.dart';
+import 'package:mysugaryapp/screens/trends/trends_screen.dart';
 import 'package:mysugaryapp/services/notification_service.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
@@ -75,6 +78,10 @@ class SugarApp extends StatelessWidget {
         '/reset': (_) => const ResetPasswordScreen(),
         '/home': (_) => const HomeScreen(),
         '/remainders': (_) => const RemindersScreen(),
+        '/trends': (_) => const TrendScreen(),
+        '/a1c': (_) => const A1CCalculatorScreen(),
+        '/a1c_add_glucose_fallback': (_) =>
+            const GlucoseScreen(), // used by CTA
       },
     );
   }

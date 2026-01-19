@@ -82,7 +82,7 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 32,
-                    backgroundColor: cs.primary.withOpacity(.12),
+                    backgroundColor: cs.primary.withValues(alpha: 0.12),
                     child: Text(
                       displayName.isNotEmpty
                           ? displayName[0].toUpperCase()
@@ -106,7 +106,7 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 6),
                         Text(
                           user?.email ?? '-',
-                          style: TextStyle(color: cs.onSurface.withOpacity(.7)),
+                          style: TextStyle(color: cs.onSurface.withValues(alpha: .7)),
                         ),
                       ],
                     ),

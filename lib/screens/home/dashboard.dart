@@ -9,6 +9,10 @@ import 'package:mysugaryapp/screens/reminders/reminders_screen.dart';
 import 'package:mysugaryapp/screens/setup/personal_setup_wizerd.dart';
 import 'package:mysugaryapp/services/profile_service.dart';
 
+// A1C calculator + optional A1C summary card
+import 'package:mysugaryapp/screens/trends/a1c_calculator_screen.dart';
+import 'package:mysugaryapp/widgets/a1c_card.dart';
+
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
 
@@ -17,7 +21,6 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
-
   Future<void> _toggleLocale() async {
     final current = context.locale.languageCode;
     final next = current == 'ar' ? const Locale('en') : const Locale('ar');
@@ -106,8 +109,6 @@ class _DashboardState extends State<Dashboard> {
       onPressed: onTap,
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(icon, color: color, size: 18),
           const SizedBox(width: 8),
@@ -120,7 +121,7 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  Widget _rowItem(String label, String value) {
+  Widget rowItem(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -221,9 +222,8 @@ class _DashboardState extends State<Dashboard> {
           ),
           const SizedBox(height: 16),
           FilledButton.icon(
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('home.quick_add_glucose'.tr())),
-            ),
+            onPressed: () =>
+                Navigator.of(context).pushNamed('/a1c_add_glucose_fallback'),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(44),
               shape: RoundedRectangleBorder(
@@ -342,7 +342,6 @@ class _DashboardState extends State<Dashboard> {
                           ),
                           Row(
                             children: [
-                              // Theme toggle placeholder button (visual only)
                               _iconSquare(
                                 icon:
                                     Theme.of(context).brightness ==
@@ -351,7 +350,7 @@ class _DashboardState extends State<Dashboard> {
                                     : Icons.wb_sunny_outlined,
                                 onTap: () {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
+                                    const SnackBar(
                                       content: Text(
                                         'Toggle theme (hook needed)',
                                       ),
@@ -360,13 +359,11 @@ class _DashboardState extends State<Dashboard> {
                                 },
                               ),
                               const SizedBox(width: 8),
-                              // Language toggle
                               _iconSquare(
                                 icon: Icons.language,
                                 onTap: _toggleLocale,
                               ),
                               const SizedBox(width: 8),
-                              // Notifications icon -> Reminders screen
                               _iconSquare(
                                 icon: Icons.notifications_outlined,
                                 onTap: () {
@@ -384,7 +381,7 @@ class _DashboardState extends State<Dashboard> {
 
                       const SizedBox(height: 16),
 
-                      // Metrics cards in order: Latest, Weekly, Meals, A1C
+                      // Metrics cards: Latest, Weekly, Meals, A1C
                       _metricCard(
                         icon: Icons.bloodtype_outlined,
                         color: Colors.red.shade600,
@@ -403,21 +400,16 @@ class _DashboardState extends State<Dashboard> {
                         icon: Icons.lunch_dining,
                         color: Colors.green.shade600,
                         title: 'home.todays_meals_title'.tr(),
-                        subtitle: 'home.todays_meals_value'
-                            .tr(), // e.g., "0 meals"
+                        subtitle: 'home.todays_meals_value'.tr(),
                       ),
                       const SizedBox(height: 12),
-                      _metricCard(
-                        icon: Icons.calculate_outlined,
-                        color: cs.primary,
-                        title: 'home.estimated_a1c_title'.tr(),
-                        subtitle: 'home.estimated_a1c_none'.tr(),
-                        filled: true,
-                      ),
+
+                      // Optional: live A1C summary card (remove if you don't want A1C on Home)
+                      A1CCard(),
 
                       const SizedBox(height: 16),
 
-                      // Quick actions block centered
+                      // Quick actions
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 18,
@@ -458,52 +450,39 @@ class _DashboardState extends State<Dashboard> {
                                   icon: Icons.bloodtype,
                                   color: Colors.red.shade600,
                                   label: 'home.quick_add_glucose'.tr(),
-                                  onTap: () => ScaffoldMessenger.of(context)
-                                      .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'home.quick_add_glucose'.tr(),
-                                          ),
-                                        ),
-                                      ),
+                                  onTap: () => Navigator.of(
+                                    context,
+                                  ).pushNamed('/a1c_add_glucose_fallback'),
                                 ),
                                 _quickActionButton(
                                   icon: Icons.lunch_dining,
                                   color: Colors.green.shade600,
                                   label: 'home.quick_add_meal'.tr(),
-                                  onTap: () => ScaffoldMessenger.of(context)
-                                      .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'home.quick_add_meal'.tr(),
-                                          ),
-                                        ),
-                                      ),
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const MealsScreen(),
+                                    ),
+                                  ),
+                                ),
+                                _quickActionButton(
+                                  icon: Icons.calculate_outlined,
+                                  color: Colors.blue.shade600,
+                                  label: 'a1c.title'.tr(),
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const A1CCalculatorScreen(),
+                                    ),
+                                  ),
                                 ),
                                 _quickActionButton(
                                   icon: Icons.insights,
                                   color: Colors.blue.shade600,
                                   label: 'home.quick_view_trends'.tr(),
-                                  onTap: () => ScaffoldMessenger.of(context)
-                                      .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'home.quick_view_trends'.tr(),
-                                          ),
-                                        ),
-                                      ),
+                                  onTap: () => Navigator.of(
+                                    context,
+                                  ).pushNamed('/trends'),
                                 ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                    builder: (_) => const MealsScreen(),
-                                    ),
-                                  );
-                                  },
-                                  child: Text('meals.screen'.tr()),
-                                ),
-                                
                               ],
                             ),
                           ],

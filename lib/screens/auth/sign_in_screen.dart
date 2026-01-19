@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' as fr;
@@ -149,7 +151,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           'sign_in.subtitle'.tr(),
                           style: TextStyle(
                             fontSize: 14,
-                            color: scheme.onSurface.withOpacity(.7),
+                            color: scheme.onSurface.withValues(alpha: 0.7),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -240,7 +242,7 @@ class _SignInScreenState extends State<SignInScreen> {
                               child: Text(
                                 'sign_in.or'.tr(),
                                 style: TextStyle(
-                                  color: scheme.onSurface.withOpacity(.7),
+                                  color: scheme.onSurface.withValues(alpha: 0.7),
                                 ),
                               ),
                             ),

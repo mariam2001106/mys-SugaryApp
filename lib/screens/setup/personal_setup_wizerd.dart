@@ -237,7 +237,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                         value: _progressNumerator / totalSteps,
                         minHeight: 6,
                         color: accent,
-                        backgroundColor: cs.onSurface.withOpacity(0.12),
+                        backgroundColor: cs.onSurface.withValues(alpha: 0.12),
                       ),
                     ),
                   ),
@@ -293,7 +293,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                       children: [
                         TextButton(
                           style: TextButton.styleFrom(
-                            backgroundColor: cs.onSurface.withOpacity(0.06),
+                            backgroundColor: cs.onSurface.withValues(alpha: 0.06),
                             shape: const StadiumBorder(),
                             foregroundColor: cs.onSurface,
                             padding: const EdgeInsets.symmetric(
@@ -308,7 +308,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                         Text(
                           'الخطوة $_progressNumerator من $totalSteps •',
                           style: TextStyle(
-                            color: cs.onSurface.withOpacity(0.7),
+                            color: cs.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -560,7 +560,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
         textAlign: Directionality.of(context) == fr.TextDirection.rtl
             ? TextAlign.right
             : TextAlign.left,
-        style: TextStyle(fontSize: 14, color: cs.onSurface.withOpacity(0.7)),
+        style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.7)),
       ),
       const SizedBox(height: 18),
       ...children,
@@ -579,12 +579,12 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? accent : cs.onSurface.withOpacity(0.06),
+          color: selected ? accent : cs.onSurface.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
             color: selected
                 ? Colors.transparent
-                : cs.onSurface.withOpacity(0.12),
+                : cs.onSurface.withValues(alpha: 0.12),
           ),
         ),
         child: Text(

@@ -307,7 +307,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                               ),
                               const SizedBox(height: 6),
                               DropdownButtonFormField<ReminderType>(
-                                value: _type,
+                                initialValue: _type,
                                 decoration: InputDecoration(
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
@@ -403,7 +403,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                               ),
                               const SizedBox(height: 6),
                               DropdownButtonFormField<String>(
-                                value: _frequency,
+                                initialValue: _frequency,
                                 decoration: InputDecoration(
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),

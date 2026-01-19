@@ -283,7 +283,7 @@ class _SmartAssistState extends State<SmartAssist> {
               const SizedBox(height: 6),
               Text(
                 subtitle,
-                style: TextStyle(color: cs.onSurface.withOpacity(.7)),
+                style: TextStyle(color: cs.onSurface.withValues(alpha: .7)),
               ),
               const SizedBox(height: 16),
               content,
