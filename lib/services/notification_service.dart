@@ -73,11 +73,40 @@ class NotificationsService {
 
     // Initialize timezone database for zoned scheduling
     tzdata.initializeTimeZones();
-    // Set tz.local to UTC as a reference timezone
-    // DateTime objects are created in device's local time and converted using tz.TZDateTime.from()
-    // which preserves the actual moment in time for notification scheduling
-    tz.setLocalLocation(tz.getLocation('UTC'));
-    debugPrint('Timezone initialized: ${tz.local}');
+    
+    // Get the device's timezone offset and set tz.local accordingly
+    final deviceOffset = DateTime.now().timeZoneOffset;
+    final offsetHours = deviceOffset.inHours;
+    final offsetMinutes = deviceOffset.inMinutes.remainder(60);
+    
+    // Try to find a timezone that matches the device offset
+    // Common timezone patterns based on offset
+    String timezoneName;
+    try {
+      // For whole hour offsets, try standard timezone names
+      if (offsetMinutes == 0) {
+        // Try common timezone names based on offset
+        if (offsetHours >= -12 && offsetHours <= 14) {
+          // Use Etc/GMT notation (note: signs are inverted in Etc/GMT)
+          // UTC+2 is Etc/GMT-2
+          timezoneName = offsetHours <= 0 
+              ? 'Etc/GMT+${offsetHours.abs()}'
+              : 'Etc/GMT-$offsetHours';
+          tz.setLocalLocation(tz.getLocation(timezoneName));
+          debugPrint('Timezone set to: $timezoneName (offset: ${deviceOffset})');
+        }
+      } else {
+        // For fractional offsets, fall back to UTC
+        tz.setLocalLocation(tz.getLocation('UTC'));
+        debugPrint('Timezone set to UTC (fractional offset detected: ${deviceOffset})');
+      }
+    } catch (e) {
+      // If timezone lookup fails, use UTC as fallback
+      tz.setLocalLocation(tz.getLocation('UTC'));
+      debugPrint('Timezone fallback to UTC (error: $e)');
+    }
+    
+    debugPrint('Final tz.local: ${tz.local.name}');
     
     _isInitialized = true;
     debugPrint('NotificationsService initialized successfully');
