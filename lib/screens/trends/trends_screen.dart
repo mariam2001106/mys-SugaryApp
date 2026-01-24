@@ -11,6 +11,7 @@ import 'package:mysugaryapp/models/user_profile.dart';
 import 'package:mysugaryapp/services/glucose_service.dart';
 import 'package:mysugaryapp/services/profile_service.dart';
 import 'package:mysugaryapp/theme/app_theme.dart';
+import 'package:mysugaryapp/widgets/firestore_trend_chart.dart';
 
 class TrendScreen extends StatefulWidget {
   final bool isArabic;
@@ -126,168 +127,20 @@ class _TrendScreenState extends State<TrendScreen> {
   }
 
   Widget _chartCard(GlucoseRanges g, List<GlucoseEntry> readings) {
-    final targetMin = g.targetMin.toDouble();
-    final targetMax = g.targetMax.toDouble();
-
     if (readings.isEmpty) {
       return _emptyChart();
-    }
-
-    final sorted = [...readings]
-      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
-    final spots = sorted.asMap().entries.map((e) {
-      return FlSpot(e.key.toDouble(), e.value.value.toDouble());
-    }).toList();
-
-    final minReading = sorted.map((e) => e.value.toDouble()).reduce(math.min);
-    final maxReading = sorted.map((e) => e.value.toDouble()).reduce(math.max);
-
-    final lowBound = math.min(minReading, targetMin);
-    final highBound = math.max(maxReading, targetMax);
-    final span = (highBound - lowBound).abs();
-    final padding = span == 0
-        ? (highBound == 0 ? 1.0 : highBound * 0.1)
-        : span * 0.1;
-    final minY = (lowBound - padding);
-    final maxY = (highBound + padding);
-
-    String xLabel(double v) {
-      final idx = v.round();
-      if (idx < 0 || idx >= sorted.length) return '';
-      return _timeFmt.format(sorted[idx].timestamp);
     }
 
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
-        child: AspectRatio(
-          aspectRatio: 1.25,
-          child: Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: BorderSide(color: Colors.grey.shade300),
-            ),
-            elevation: 1,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-              child: LineChart(
-                LineChartData(
-                  minY: minY,
-                  maxY: maxY,
-                  rangeAnnotations: RangeAnnotations(
-                    horizontalRangeAnnotations: [
-                      HorizontalRangeAnnotation(
-                        y1: targetMin,
-                        y2: targetMax,
-                        color: AppColors.gray.withOpacity(0.12),
-                      ),
-                    ],
-                  ),
-                  lineTouchData: LineTouchData(
-                    enabled: true,
-                    handleBuiltInTouches: true,
-                    touchTooltipData: LineTouchTooltipData(
-                      getTooltipItems: (spots) => spots
-                          .map(
-                            (s) => LineTooltipItem(
-                              s.y.toStringAsFixed(0),
-                              const TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ),
-                  gridData: const FlGridData(show: false),
-                  titlesData: FlTitlesData(
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        interval: (targetMax - targetMin).abs(),
-                        getTitlesWidget: (v, _) {
-                          if (v == targetMin || v == targetMax) {
-                            return Text(
-                              v.toInt().toString(),
-                              style: const TextStyle(fontSize: 11),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: sorted.isEmpty
-                            ? 1
-                            : (sorted.length / 3).clamp(1, 6).toDouble(),
-                        getTitlesWidget: (v, _) {
-                          final i = v.toInt();
-                          if (i < 0 || i >= sorted.length)
-                            return const SizedBox.shrink();
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              xLabel(v),
-                              style: const TextStyle(fontSize: 10),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  extraLinesData: ExtraLinesData(
-                    horizontalLines: [
-                      HorizontalLine(
-                        y: targetMin,
-                        color: Colors.blueGrey.withOpacity(0.6),
-                        dashArray: const [6, 6],
-                        strokeWidth: 1,
-                      ),
-                      HorizontalLine(
-                        y: targetMax,
-                        color: Colors.blueGrey.withOpacity(0.6),
-                        dashArray: const [6, 6],
-                        strokeWidth: 1,
-                      ),
-                    ],
-                  ),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: spots,
-                      isCurved: true,
-                      preventCurveOverShooting: true,
-                      barWidth: 2.8,
-                      color: const Color(0xFF4A90E2),
-                      dotData: FlDotData(
-                        show: true,
-                        getDotPainter: (spot, percent, bar, idx) =>
-                            FlDotCirclePainter(
-                              radius: 4,
-                              color: Colors.white,
-                              strokeWidth: 2,
-                              strokeColor: const Color(0xFF4A90E2),
-                            ),
-                      ),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: const Color(0xFF4A90E2).withOpacity(0.12),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(color: Colors.grey.shade300),
           ),
+          elevation: 1,
+          child: FirestoreTrendChart(selectedHours: _selectedHours),
         ),
       ),
     );
