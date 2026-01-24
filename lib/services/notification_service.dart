@@ -157,8 +157,7 @@ class NotificationsService {
             scheduledDate,
             _details(),
             androidScheduleMode: AndroidScheduleMode.exact,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
+          
           );
           debugPrint('✓ Daily notification scheduled successfully (using exact mode)');
           debugPrint('  Will fire at: $scheduledDate');
@@ -171,8 +170,6 @@ class NotificationsService {
             scheduledDate,
             _details(),
             androidScheduleMode: AndroidScheduleMode.exact,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
           );
           debugPrint('✓ Weekly notification scheduled successfully (using exact mode)');
           debugPrint('  Will fire at: $scheduledDate');
@@ -185,8 +182,6 @@ class NotificationsService {
             scheduledDate,
             _details(),
             androidScheduleMode: AndroidScheduleMode.exact,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
           );
           debugPrint('✓ Monthly notification scheduled successfully (using exact mode)');
           debugPrint('  Will fire at: $scheduledDate');
