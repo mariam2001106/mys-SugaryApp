@@ -1,16 +1,13 @@
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mysugaryapp/models/glucose_entry_model.dart';
 import 'package:mysugaryapp/models/user_profile.dart';
 import 'package:mysugaryapp/services/glucose_service.dart';
 import 'package:mysugaryapp/services/profile_service.dart';
-import 'package:mysugaryapp/theme/app_theme.dart';
 import 'package:mysugaryapp/widgets/firestore_trend_chart.dart';
 
 class TrendScreen extends StatefulWidget {
