@@ -101,9 +101,11 @@ class _TrendScreenState extends State<TrendScreen> {
             (h) => ChoiceChip(
               label: Text('$h ${'trends.range_label'.tr()}'),
               selected: _selectedHours == h,
-              selectedColor: Colors.black,
+              selectedColor: Theme.of(context).colorScheme.primary,
               labelStyle: TextStyle(
-                color: _selectedHours == h ? Colors.white : Colors.black87,
+                color: _selectedHours == h 
+                    ? Theme.of(context).colorScheme.onPrimary 
+                    : Theme.of(context).colorScheme.onSurface,
                 fontWeight: _selectedHours == h
                     ? FontWeight.w700
                     : FontWeight.w500,
@@ -113,8 +115,8 @@ class _TrendScreenState extends State<TrendScreen> {
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(
                   color: _selectedHours == h
-                      ? Colors.black
-                      : Colors.grey.shade300,
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.outline,
                 ),
               ),
             ),
@@ -182,9 +184,9 @@ class _TrendScreenState extends State<TrendScreen> {
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.show_chart,
-                    color: Color(0xFF4A90E2),
+                    color: Theme.of(context).colorScheme.primary,
                     size: 24,
                   ),
                   const SizedBox(height: 6),
@@ -198,15 +200,18 @@ class _TrendScreenState extends State<TrendScreen> {
                   const SizedBox(height: 8),
                   Text(
                     lr.value.toStringAsFixed(0),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF2563EB),
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   Text(
                     'units.mgdl'.tr(),
-                    style: const TextStyle(color: Colors.black54, fontSize: 12),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -246,7 +251,7 @@ class _TrendScreenState extends State<TrendScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Icon(Icons.calculate, color: Colors.green, size: 24),
+            Icon(Icons.calculate, color: Theme.of(context).colorScheme.secondary, size: 24),
             const SizedBox(height: 6),
             Text(
               'a1c.last_30_days'.tr(),
@@ -255,23 +260,23 @@ class _TrendScreenState extends State<TrendScreen> {
             const SizedBox(height: 8),
             Text(
               '${a1c.toStringAsFixed(2)}%',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.w800,
-                color: Colors.green,
+                color: Theme.of(context).colorScheme.secondary,
               ),
             ),
             const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: const Color(0xFFD61C4E),
+                color: Theme.of(context).colorScheme.error,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 'a1c.status_controlled'.tr(),
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onError,
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),
