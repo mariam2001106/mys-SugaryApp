@@ -6,7 +6,9 @@ import 'package:flutter/rendering.dart' as fr;
 
 
 class ProfileScreen extends StatelessWidget {
+  
   const ProfileScreen({super.key});
+
 
   Future<void> _showSignOutDialog(BuildContext context) async {
     final confirmed = await showDialog<bool>(

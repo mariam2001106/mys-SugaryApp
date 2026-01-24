@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mysugaryapp/models/glucose_entry_model.dart';
 import 'package:mysugaryapp/services/glucose_service.dart';
 import 'package:mysugaryapp/services/profile_service.dart';
-import 'package:mysugaryapp/models/user_profile.dart';
 
 class A1CCalculatorScreen extends StatefulWidget {
   const A1CCalculatorScreen({super.key});

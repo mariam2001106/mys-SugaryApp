@@ -11,13 +11,13 @@ class FirestoreTrendChart extends StatelessWidget {
   final int veryHigh;
 
   const FirestoreTrendChart({
-    Key? key,
+    super.key,
     required this.selectedHours,
     required this.veryLow,
     required this.targetMin,
     required this.targetMax,
     required this.veryHigh,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

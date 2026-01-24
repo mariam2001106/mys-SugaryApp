@@ -45,7 +45,6 @@ class _DashboardState extends State<Dashboard> {
     required Color color,
     required String title,
     required String subtitle,
-    bool filled = false,
   }) {
     final cs = Theme.of(context).colorScheme;
     return Container(

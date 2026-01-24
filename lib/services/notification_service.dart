@@ -1,14 +1,26 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:mysugaryapp/models/reminder_models.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 class NotificationsService {
+  // Singleton pattern
+  static final NotificationsService _instance = NotificationsService._internal();
+  
+  factory NotificationsService() {
+    return _instance;
+  }
+  
+  NotificationsService._internal();
+
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
+  
+  bool _isInitialized = false;
 
   Future<void> init() async {
+    if (_isInitialized) return;
+
     await _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
@@ -26,10 +38,15 @@ class NotificationsService {
 
     // Initialize timezone database for zoned scheduling
     tzdata.initializeTimeZones();
+    
+    _isInitialized = true;
   }
 
   /// Schedule reminder using inexact modes (battery-friendly) based on frequency.
   Future<void> scheduleReminder(ReminderItemDto reminder) async {
+    // Ensure the service is initialized
+    await init();
+    
     if (!reminder.enabled) return;
 
     final parts = reminder.time.split(':');
@@ -83,14 +100,20 @@ class NotificationsService {
   }
 
   Future<void> cancelReminder(ReminderItemDto reminder) async {
+    // Ensure the service is initialized
+    await init();
     await _plugin.cancel(reminder.id.hashCode);
   }
 
   Future<void> cancelReminderById(String id) async {
+    // Ensure the service is initialized
+    await init();
     await _plugin.cancel(id.hashCode);
   }
 
   Future<void> rescheduleAll(List<ReminderItemDto> reminders) async {
+    // Ensure the service is initialized once before rescheduling all
+    await init();
     for (final r in reminders) {
       if (r.enabled) {
         await scheduleReminder(r);

@@ -82,7 +82,7 @@ class _SmartAssistState extends State<SmartAssist> {
                   SizedBox(
                     width: 160,
                     child: DropdownButtonFormField<ReminderType>(
-                      value: item.type,
+                      initialValue: item.type,
                       decoration: InputDecoration(
                         labelText: 'reminders.type_label'.tr(),
                         filled: true,
