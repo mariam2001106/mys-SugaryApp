@@ -127,7 +127,7 @@ class FirestoreTrendChart extends StatelessWidget {
                         } else if (intValue == veryHigh) {
                           return Text("veryHigh", style: TextStyle(fontSize: 11, color: textColor));
                         }
-                        return const Text("");
+                        return Text("", style: TextStyle(color: textColor));
                       },
                       interval: yInterval,
                     ),
