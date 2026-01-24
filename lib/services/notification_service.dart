@@ -211,4 +211,27 @@ class NotificationsService {
       ),
     );
   }
+  
+  /// Show an immediate test notification to verify the notification system works
+  Future<void> showTestNotification() async {
+    await init();
+    await _plugin.show(
+      999,
+      'Test Notification',
+      'If you see this, notifications are working!',
+      _details(),
+    );
+    debugPrint('Test notification shown');
+  }
+  
+  /// Get list of pending notifications (for debugging)
+  Future<List<PendingNotificationRequest>> getPendingNotifications() async {
+    await init();
+    final pending = await _plugin.pendingNotificationRequests();
+    debugPrint('Pending notifications count: ${pending.length}');
+    for (final p in pending) {
+      debugPrint('  - ID: ${p.id}, Title: ${p.title}, Body: ${p.body}');
+    }
+    return pending;
+  }
 }

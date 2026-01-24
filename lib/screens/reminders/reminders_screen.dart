@@ -180,12 +180,16 @@ class _RemindersScreenState extends State<RemindersScreen> {
       final newId = await _svc.addReminder(_uid!, dto);
       final created = dto.copyWith(id: newId);
       await NotificationsService().scheduleReminder(created);
+      // Verify notification was scheduled
+      await NotificationsService().getPendingNotifications();
       if (!mounted) return;
       setState(() => _items.add(created));
     } else {
       await _svc.updateReminder(_uid!, dto);
       await NotificationsService().cancelReminder(_items[_editingIndex!]);
       await NotificationsService().scheduleReminder(dto);
+      // Verify notification was scheduled
+      await NotificationsService().getPendingNotifications();
       if (!mounted) return;
       setState(() => _items[_editingIndex!] = dto);
     }
@@ -236,6 +240,19 @@ class _RemindersScreenState extends State<RemindersScreen> {
               ),
             ],
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.bug_report),
+              tooltip: 'Test Notification',
+              onPressed: () async {
+                await NotificationsService().showTestNotification();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Test notification sent!')),
+                );
+              },
+            ),
+          ],
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(24),
             child: Padding(
