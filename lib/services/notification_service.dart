@@ -37,6 +37,18 @@ class NotificationsService {
         >()
         ?.requestExactAlarmsPermission();
     debugPrint('Exact alarm permission granted: $exactAlarmPermission');
+    
+    // Check if we can schedule exact alarms
+    final canScheduleExactAlarms = await _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.canScheduleExactNotifications();
+    debugPrint('Can schedule exact alarms: $canScheduleExactAlarms');
+    
+    if (canScheduleExactAlarms == false) {
+      debugPrint('⚠️ WARNING: Cannot schedule exact alarms. User must enable this in settings.');
+    }
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     final settings = InitializationSettings(android: android);
@@ -130,6 +142,7 @@ class NotificationsService {
     try {
       switch (reminder.frequency) {
         case ReminderFrequency.daily:
+          // For daily reminders, first schedule the immediate occurrence
           await _plugin.zonedSchedule(
             id,
             title,
@@ -138,8 +151,11 @@ class NotificationsService {
             _details(),
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
             matchDateTimeComponents: DateTimeComponents.time,
+           
           );
-          debugPrint('✓ Daily notification scheduled successfully');
+          debugPrint('✓ Daily notification scheduled successfully (using exact mode)');
+          debugPrint('  Will fire at: $tzScheduledDate');
+          // Note: matchDateTimeComponents.time would make it repeat, but let's test one-time first
           break;
         case ReminderFrequency.weekly:
           await _plugin.zonedSchedule(
@@ -150,9 +166,10 @@ class NotificationsService {
             _details(),
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
             matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-
+            
           );
-          debugPrint('✓ Weekly notification scheduled successfully');
+          debugPrint('✓ Weekly notification scheduled successfully (using exact mode)');
+          debugPrint('  Will fire at: $tzScheduledDate');
           break;
         case ReminderFrequency.monthly:
           await _plugin.zonedSchedule(
@@ -163,9 +180,10 @@ class NotificationsService {
             _details(),
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
             matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
-
+           
           );
-          debugPrint('✓ Monthly notification scheduled successfully');
+          debugPrint('✓ Monthly notification scheduled successfully (using exact mode)');
+          debugPrint('  Will fire at: $tzScheduledDate');
           break;
       }
       debugPrint('=== Scheduling Complete ===\n');
@@ -220,6 +238,17 @@ class NotificationsService {
       _details(),
     );
     debugPrint('Test notification shown');
+  }
+  
+  /// Check if exact alarms can be scheduled
+  Future<bool> canScheduleExactAlarms() async {
+    await init();
+    final canSchedule = await _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.canScheduleExactNotifications();
+    return canSchedule ?? false;
   }
   
   /// Get list of pending notifications (for debugging)

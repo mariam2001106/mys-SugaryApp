@@ -35,6 +35,21 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   Future<void> _init() async {
     await _load();
+    // Check if exact alarms can be scheduled
+    final canSchedule = await NotificationsService().canScheduleExactAlarms();
+    if (!mounted) return;
+    if (!canSchedule) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('⚠️ Exact alarm permission needed for timed reminders. Please enable in Settings → Apps → Sugary → Alarms & reminders'),
+          duration: const Duration(seconds: 8),
+          action: SnackBarAction(
+            label: 'OK',
+            onPressed: () {},
+          ),
+        ),
+      );
+    }
   }
 
   @override
