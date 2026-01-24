@@ -39,11 +39,13 @@ class NotificationsService {
 
     // Initialize timezone database for zoned scheduling
     tzdata.initializeTimeZones();
+    // Set the local timezone location - critical for tz.local to work
+    tz.setLocalLocation(tz.getLocation('UTC'));
     
     _isInitialized = true;
   }
 
-  /// Schedule reminder using inexact modes (battery-friendly) based on frequency.
+  /// Schedule reminder using exact alarms to ensure notifications fire at the specified time.
   Future<void> scheduleReminder(ReminderItemDto reminder) async {
     // Ensure the service is initialized
     await init();
@@ -71,8 +73,10 @@ class NotificationsService {
           body,
           tzBase,
           _details(),
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.time,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
         );
         break;
       case ReminderFrequency.weekly:
@@ -82,8 +86,10 @@ class NotificationsService {
           body,
           tzBase,
           _details(),
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
         );
         break;
       case ReminderFrequency.monthly:
@@ -93,8 +99,10 @@ class NotificationsService {
           body,
           tzBase,
           _details(),
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
         );
         break;
     }
