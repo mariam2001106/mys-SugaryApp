@@ -39,8 +39,9 @@ class NotificationsService {
 
     // Initialize timezone database for zoned scheduling
     tzdata.initializeTimeZones();
-    // Set the local timezone location - critical for tz.local to work
-    // Use UTC as the base - the DateTime objects are already in local time
+    // Set tz.local to UTC as a reference timezone
+    // DateTime objects are created in device's local time and converted using tz.TZDateTime.from()
+    // which preserves the actual moment in time for notification scheduling
     tz.setLocalLocation(tz.getLocation('UTC'));
     
     _isInitialized = true;
@@ -55,11 +56,15 @@ class NotificationsService {
 
     // Validate time format
     final parts = reminder.time.split(':');
-    if (parts.length != 2) return;
+    if (parts.length != 2) {
+      debugPrint('Invalid time format for reminder ${reminder.id}: ${reminder.time}');
+      return;
+    }
     
     final hour = int.tryParse(parts[0]);
     final minute = int.tryParse(parts[1]);
     if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      debugPrint('Invalid time values for reminder ${reminder.id}: hour=$hour, minute=$minute');
       return;
     }
     
