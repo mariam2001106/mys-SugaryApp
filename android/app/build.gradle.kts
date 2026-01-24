@@ -24,6 +24,7 @@ android {
     // Migrated Kotlin JVM target to compilerOptions DSL below
 
     defaultConfig {
+        multiDexEnabled = true
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.sugary"
         // You can update the following values to match your application needs.

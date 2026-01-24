@@ -4,6 +4,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dashboard.dart';
 import 'package:mysugaryapp/screens/profile/profile_screen.dart';
+import 'package:mysugaryapp/screens/glucose/glucose_screen.dart';
+import 'package:mysugaryapp/screens/meals/meals.screen.dart';
+import 'package:mysugaryapp/screens/trends/trends_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,18 +20,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   late final List<Widget> _pages = const [
     Dashboard(),
-    _PlaceholderPage(titleKey: 'home.glucose'),
-    _PlaceholderPage(titleKey: 'home.meals'),
-    _PlaceholderPage(titleKey: 'home.trends'),
+    GlucoseScreen(),
+    MealLogScreen(),
+    TrendScreen(),
     ProfileScreen(),
   ];
 
   void _onTab(int i) => setState(() => _currentIndex = i);
 
-  Future<void> _signOut() async {
-    await FirebaseAuth.instance.signOut();
-  }
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -37,73 +36,44 @@ class _HomeScreenState extends State<HomeScreen> {
     return Directionality(
       textDirection: isArabic ? fr.TextDirection.rtl : fr.TextDirection.ltr,
       child: Scaffold(
-        appBar: AppBar(title: Text('home.title'.tr()), centerTitle: true),
+        appBar: _currentIndex == 0
+            ? AppBar(title: Text('home.title'.tr()), centerTitle: true)
+            : null,
         body: SafeArea(child: _pages[_currentIndex]),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: _onTab,
-          type: BottomNavigationBarType.fixed,
+          type: BottomNavigationBarType.shifting,
           selectedItemColor: cs.primary,
           unselectedItemColor: cs.onSurface.withValues(alpha: 0.6),
+          showUnselectedLabels: false,
           items: [
             BottomNavigationBarItem(
               icon: const Icon(Icons.home_outlined),
               label: 'home.nav_home'.tr(),
+              backgroundColor: cs.surface,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.bloodtype_outlined),
               label: 'home.nav_glucose'.tr(),
+              backgroundColor: cs.surface,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.restaurant_outlined),
               label: 'home.nav_meals'.tr(),
+              backgroundColor: cs.surface,
             ),
             BottomNavigationBarItem(
-              icon: const Icon(Icons.show_chart_outlined),
+              icon: const Icon(Icons.timeline_outlined),
               label: 'home.nav_trends'.tr(),
+              backgroundColor: cs.surface,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.person_outline),
               label: 'home.nav_profile'.tr(),
+              backgroundColor: cs.surface,
             ),
           ],
-        ),
-        drawer: Drawer(
-          child: SafeArea(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.logout_outlined),
-                  title: Text('home.logout'.tr()),
-                  onTap: _signOut,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PlaceholderPage extends StatelessWidget {
-  final String titleKey;
-  const _PlaceholderPage({required this.titleKey});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final isArabic = context.locale.languageCode == 'ar';
-
-    return Directionality(
-      textDirection: isArabic ? fr.TextDirection.rtl : fr.TextDirection.ltr,
-      child: Scaffold(
-        appBar: AppBar(title: Text(titleKey.tr()), centerTitle: true),
-        body: Center(
-          child: Text(
-            '${'home.under_construction'.tr()}: ${titleKey.tr()}',
-            style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7)),
-          ),
         ),
       ),
     );

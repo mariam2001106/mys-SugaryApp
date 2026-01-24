@@ -28,8 +28,8 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Initializes local notification engine for time-based reminders.
-  await NotificationService.instance.init();
-
+  final notificationsService = NotificationsService();
+  await notificationsService.init();
   // Disable GoogleFonts runtime fetching to avoid network dependencies
   GoogleFonts.config.allowRuntimeFetching = false;
 

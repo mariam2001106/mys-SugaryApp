@@ -18,12 +18,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
   final _titleCtrl = TextEditingController();
   final _svc = ReminderService();
 
-  //notifaer handling
-  final _notifier = NotificationService.instance;
-
   ReminderType? _type;
   TimeOfDay? _time;
-  String _frequency = 'reminders.freq_daily';
+  ReminderFrequency _frequency = ReminderFrequency.daily;
 
   int? _editingIndex; // null means adding
   List<ReminderItemDto> _items = [];
@@ -33,7 +30,11 @@ class _RemindersScreenState extends State<RemindersScreen> {
   @override
   void initState() {
     super.initState();
-    _load();
+    _init();
+  }
+
+  Future<void> _init() async {
+    await _load();
   }
 
   @override
@@ -42,15 +43,14 @@ class _RemindersScreenState extends State<RemindersScreen> {
     super.dispose();
   }
 
-  // Load reminders from Firestore
   Future<void> _load() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       setState(() => _loading = false);
       return;
     }
+
     final items = await _svc.listReminders(uid);
-    await _notifier.rescheduleAll(items); // schedule all enabled
     if (!mounted) return;
     setState(() {
       _uid = uid;
@@ -93,6 +93,17 @@ class _RemindersScreenState extends State<RemindersScreen> {
     }
   }
 
+  String _freqLabel(ReminderFrequency f) {
+    switch (f) {
+      case ReminderFrequency.daily:
+        return 'reminders.freq_daily'.tr();
+      case ReminderFrequency.weekly:
+        return 'reminders.freq_weekly'.tr();
+      case ReminderFrequency.monthly:
+        return 'reminders.freq_custom'.tr();
+    }
+  }
+
   TimeOfDay? _parseHHmm(String hhmm) {
     final parts = hhmm.split(':');
     if (parts.length >= 2) {
@@ -103,10 +114,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
     return null;
   }
 
-  // Format TimeOfDay to "HH:mm"
   String _formatHHmm(TimeOfDay t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
-  // Show time picker dialog
+
   Future<void> _pickTime() async {
     final picked = await showTimePicker(
       context: context,
@@ -114,16 +124,16 @@ class _RemindersScreenState extends State<RemindersScreen> {
     );
     if (picked != null) setState(() => _time = picked);
   }
-  // Reset form inputs
+
   void _resetForm() {
     _editingIndex = null;
     _type = null;
     _time = null;
-    _frequency = 'reminders.freq_daily';
+    _frequency = ReminderFrequency.daily;
     _titleCtrl.clear();
     setState(() {});
   }
-  // Start editing a reminder
+
   void _startEdit(int index) {
     final r = _items[index];
     _editingIndex = index;
@@ -133,19 +143,19 @@ class _RemindersScreenState extends State<RemindersScreen> {
     _titleCtrl.text = r.title;
     setState(() {});
   }
-  // Delete a reminder
+
   Future<void> _deleteItem(int index) async {
     if (_uid == null) return;
     final r = _items[index];
     await _svc.deleteReminder(_uid!, r.id);
-    await _notifier.cancelReminder(r); // cancel notif
+    await NotificationsService().cancelReminder(r);
     if (!mounted) return;
     setState(() {
       _items.removeAt(index);
       if (_editingIndex == index) _resetForm();
     });
   }
-  // Add or update reminder based on form inputs
+
   Future<void> _addOrUpdateReminder() async {
     if (_uid == null) return;
     if (!_formKey.currentState!.validate()) return;
@@ -155,6 +165,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
       ).showSnackBar(SnackBar(content: Text('reminders.missing_fields'.tr())));
       return;
     }
+
     final hhmm = _formatHHmm(_time!);
     final dto = ReminderItemDto(
       id: _editingIndex == null ? '' : _items[_editingIndex!].id,
@@ -168,29 +179,29 @@ class _RemindersScreenState extends State<RemindersScreen> {
     if (_editingIndex == null) {
       final newId = await _svc.addReminder(_uid!, dto);
       final created = dto.copyWith(id: newId);
-      await _notifier.scheduleReminder(created); // schedule new
+      await NotificationsService().scheduleReminder(created);
       if (!mounted) return;
       setState(() => _items.add(created));
     } else {
       await _svc.updateReminder(_uid!, dto);
-      await _notifier.cancelReminder(_items[_editingIndex!]); // cancel old
-      await _notifier.scheduleReminder(dto); // schedule updated
+      await NotificationsService().cancelReminder(_items[_editingIndex!]);
+      await NotificationsService().scheduleReminder(dto);
       if (!mounted) return;
       setState(() => _items[_editingIndex!] = dto);
     }
+
     _resetForm();
   }
 
-  // Toggle enabled/disabled state of a reminder
   Future<void> _toggleEnabled(int index, bool value) async {
     if (_uid == null) return;
     final curr = _items[index];
     final updated = curr.copyWith(enabled: value);
     await _svc.updateReminder(_uid!, updated);
     if (value) {
-      await _notifier.scheduleReminder(updated);
+      await NotificationsService().scheduleReminder(updated);
     } else {
-      await _notifier.cancelReminder(curr);
+      await NotificationsService().cancelReminder(curr);
     }
     if (!mounted) return;
     setState(() => _items[index] = updated);
@@ -198,11 +209,11 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
+    final isRtl = context.locale.languageCode == 'ar';
     final cs = Theme.of(context).colorScheme;
 
     return Directionality(
-      textDirection: isArabic ? fr.TextDirection.rtl : fr.TextDirection.ltr,
+      textDirection: isRtl ? fr.TextDirection.rtl : fr.TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
@@ -211,7 +222,10 @@ class _RemindersScreenState extends State<RemindersScreen> {
           ),
           title: Row(
             children: [
-              const Icon(Icons.notifications_none, color: Colors.deepPurple),
+              const Icon(
+                Icons.notifications_none,
+                color: Color.fromARGB(255, 48, 26, 188),
+              ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -402,7 +416,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              DropdownButtonFormField<String>(
+                              DropdownButtonFormField<ReminderFrequency>(
                                 initialValue: _frequency,
                                 decoration: InputDecoration(
                                   border: OutlineInputBorder(
@@ -413,23 +427,16 @@ class _RemindersScreenState extends State<RemindersScreen> {
                                     vertical: 10,
                                   ),
                                 ),
-                                items: [
-                                  DropdownMenuItem(
-                                    value: 'reminders.freq_daily',
-                                    child: Text('reminders.freq_daily'.tr()),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'reminders.freq_weekly',
-                                    child: Text('reminders.freq_weekly'.tr()),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'reminders.freq_custom',
-                                    child: Text('reminders.freq_custom'.tr()),
-                                  ),
-                                ],
+                                items: ReminderFrequency.values.map((f) {
+                                  final label = _freqLabel(f);
+                                  return DropdownMenuItem(
+                                    value: f,
+                                    child: Text(label),
+                                  );
+                                }).toList(),
                                 onChanged: (v) => setState(
                                   () =>
-                                      _frequency = v ?? 'reminders.freq_daily',
+                                      _frequency = v ?? ReminderFrequency.daily,
                                 ),
                               ),
                               const SizedBox(height: 14),
@@ -543,7 +550,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
-                                                  '${r.time} • ${r.frequency.tr()}',
+                                                  '${r.time} • ${_freqLabel(r.frequency)}',
                                                   style: TextStyle(
                                                     color: cs.onSurface
                                                         .withValues(alpha: 0.7),

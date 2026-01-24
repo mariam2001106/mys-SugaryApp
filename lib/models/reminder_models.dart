@@ -2,13 +2,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum ReminderType { medication, glucose, appointment }
 
+enum ReminderFrequency { daily, weekly, monthly }
+
 class ReminderItemDto {
   ReminderItemDto({
     required this.id,
     required this.type,
     required this.title,
     required this.time, // "08:00"
-    required this.frequency, // e.g., "reminders.freq_daily"
+    required this.frequency, // periodic frequency
     required this.enabled,
   });
 
@@ -16,7 +18,7 @@ class ReminderItemDto {
   final ReminderType type;
   final String title;
   final String time;
-  final String frequency;
+  final ReminderFrequency frequency;
   final bool enabled;
 
   ReminderItemDto copyWith({
@@ -24,7 +26,7 @@ class ReminderItemDto {
     ReminderType? type,
     String? title,
     String? time,
-    String? frequency,
+    ReminderFrequency? frequency,
     bool? enabled,
   }) {
     return ReminderItemDto(
@@ -41,7 +43,7 @@ class ReminderItemDto {
     'type': type.name,
     'title': title,
     'time': time,
-    'frequency': frequency,
+    'frequency': frequency.name, // store as "daily" | "weekly" | "monthly"
     'enabled': enabled,
     'createdAt': DateTime.now().toIso8601String(),
   };
@@ -64,7 +66,7 @@ class ReminderItemDto {
       type: _typeFromKey(d['type'] as String?),
       title: d['title'] as String? ?? '',
       time: d['time'] as String? ?? '',
-      frequency: d['frequency'] as String? ?? 'reminders.freq_daily',
+      frequency: _freqFromKey(d['frequency'] as String?),
       enabled: (d['enabled'] as bool?) ?? true,
     );
   }
@@ -72,5 +74,20 @@ class ReminderItemDto {
   static ReminderItemDto fromDoc(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
     return fromMap(doc.id, d);
+  }
+
+  static ReminderFrequency _freqFromKey(String? k) {
+    switch (k) {
+      case 'weekly':
+      case 'reminders.freq_weekly':
+        return ReminderFrequency.weekly;
+      case 'monthly':
+      case 'reminders.freq_monthly':
+        return ReminderFrequency.monthly;
+      case 'daily':
+      case 'reminders.freq_daily':
+      default:
+        return ReminderFrequency.daily;
+    }
   }
 }

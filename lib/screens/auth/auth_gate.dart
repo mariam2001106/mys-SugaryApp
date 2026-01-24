@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -46,8 +45,8 @@ class _AuthGateState extends State<AuthGate> {
               return _ErrorScreen('Create profile error: ${createSnap.error}');
             }
 
-            return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              future: svc.getUserDocFromServer(user.uid),
+            return FutureBuilder<Map<String, dynamic>?>(
+              future: svc.getUserDataFromServer(user.uid),
               builder: (context, docSnap) {
                 if (docSnap.connectionState == ConnectionState.waiting) {
                   return const _Splash();
@@ -55,7 +54,7 @@ class _AuthGateState extends State<AuthGate> {
                 if (docSnap.hasError) {
                   // ignore and continue to stream
                 } else if (docSnap.hasData) {
-                  final data = docSnap.data?.data();
+                  final data = docSnap.data;
                   final localeCode = data?['locale'] as String?;
                   if (localeCode != null && _appliedLocaleForUid != user.uid) {
                     try {

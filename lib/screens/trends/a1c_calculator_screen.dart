@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
@@ -116,60 +115,6 @@ class _A1CCalculatorScreenState extends State<A1CCalculatorScreen> {
                                 ),
 
                                 const SizedBox(height: 12),
-
-                                Wrap(
-                                  spacing: 12,
-                                  runSpacing: 6,
-                                  children: [
-                                    Text(
-                                      'a1c.last_reading'.tr(
-                                        args: ['${entries.last.value}'],
-                                      ),
-                                      style: TextStyle(
-                                        color: cs.onSurface.withValues(
-                                          alpha: 0.8,
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      'a1c.avg_glucose'.tr(
-                                        args: [avg!.toStringAsFixed(0)],
-                                      ),
-                                      style: TextStyle(
-                                        color: cs.onSurface.withValues(
-                                          alpha: 0.8,
-                                        ),
-                                      ),
-                                    ),
-                                    // Age fetched from profile service
-                                    if (uid != null)
-                                      FutureBuilder<
-                                        DocumentSnapshot<Map<String, dynamic>>
-                                      >(
-                                        future: _profileSvc.getUserDoc(uid),
-                                        builder: (context, pSnap) {
-                                          final doc = pSnap.data;
-                                          if (doc == null || !doc.exists)
-                                            return const SizedBox.shrink();
-                                          final profile = UserProfile.fromDoc(
-                                            doc,
-                                          );
-                                          if (profile.age == null)
-                                            return const SizedBox.shrink();
-                                          return Text(
-                                            'a1c.age'.tr(
-                                              args: ['${profile.age}'],
-                                            ),
-                                            style: TextStyle(
-                                              color: cs.onSurface.withValues(
-                                                alpha: 0.8,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                  ],
-                                ),
                               ],
                             )
                           : _emptyCard(cs),
@@ -194,45 +139,6 @@ class _A1CCalculatorScreenState extends State<A1CCalculatorScreen> {
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                 ),
-                              ),
-                              const Spacer(),
-                              FutureBuilder<
-                                DocumentSnapshot<Map<String, dynamic>>?
-                              >(
-                                future:
-                                    FirebaseAuth.instance.currentUser == null
-                                    ? Future.value(null)
-                                    : _profileSvc.getUserDoc(
-                                        FirebaseAuth.instance.currentUser!.uid,
-                                      ),
-                                builder: (context, pSnap) {
-                                  final doc = pSnap.data;
-                                  if (doc == null || !doc.exists)
-                                    return const SizedBox.shrink();
-                                  final profile = UserProfile.fromDoc(doc);
-                                  if (profile.age == null)
-                                    return const SizedBox.shrink();
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: cs.surface,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: cs.onSurface.withValues(
-                                          alpha: 0.12,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'a1c.age_chip'.tr(
-                                        args: [profile.age.toString()],
-                                      ),
-                                    ),
-                                  );
-                                },
                               ),
                             ],
                           ),

@@ -4,10 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 import 'package:mysugaryapp/models/user_profile.dart';
+import 'package:mysugaryapp/models/glucose_entry_model.dart';
 import 'package:mysugaryapp/screens/meals/meals.screen.dart';
 import 'package:mysugaryapp/screens/reminders/reminders_screen.dart';
 import 'package:mysugaryapp/screens/setup/personal_setup_wizerd.dart';
 import 'package:mysugaryapp/services/profile_service.dart';
+import 'package:mysugaryapp/services/glucose_service.dart';
 
 // A1C calculator + optional A1C summary card
 import 'package:mysugaryapp/screens/trends/a1c_calculator_screen.dart';
@@ -48,23 +50,51 @@ class _DashboardState extends State<Dashboard> {
     final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: filled ? cs.surfaceContainerHighest : cs.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: cs.onSurface.withValues(alpha: 0.12),
-          width: 1,
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.05),
+            color.withValues(alpha: 0.02),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: color.withValues(alpha: 0.12),
-            child: Icon(icon, color: color),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  color.withValues(alpha: 0.2),
+                  color.withValues(alpha: 0.15),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.2),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(icon, color: color, size: 24),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,8 +102,9 @@ class _DashboardState extends State<Dashboard> {
                 Text(
                   title,
                   style: TextStyle(
-                    color: cs.onSurface.withValues(alpha: 0.65),
+                    color: cs.onSurface.withValues(alpha: 0.7),
                     fontSize: 13,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -81,7 +112,8 @@ class _DashboardState extends State<Dashboard> {
                   subtitle,
                   style: TextStyle(
                     color: cs.onSurface,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 17,
                   ),
                 ),
               ],
@@ -99,24 +131,52 @@ class _DashboardState extends State<Dashboard> {
     required VoidCallback onTap,
   }) {
     final cs = Theme.of(context).colorScheme;
-    return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        side: BorderSide(color: cs.onSurface.withValues(alpha: 0.12), width: 1),
-        minimumSize: const Size.fromHeight(44),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      onPressed: onTap,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w600),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
+      ),
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          backgroundColor: color.withValues(alpha: 0.08),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+          side: BorderSide(color: color.withValues(alpha: 0.3), width: 1.5),
+          minimumSize: const Size.fromHeight(48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        onPressed: onTap,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.5,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -184,54 +244,108 @@ class _DashboardState extends State<Dashboard> {
     final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: cs.onSurface.withValues(alpha: 0.16),
-          width: 1,
+        gradient: LinearGradient(
+          colors: [
+            cs.primary.withValues(alpha: 0.05),
+            cs.secondary.withValues(alpha: 0.08),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: cs.primary.withValues(alpha: 0.2),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: cs.primary.withValues(alpha: 0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          const SizedBox(height: 4),
-          Icon(
-            Icons.monitor_heart_outlined,
-            size: 44,
-            color: cs.onSurface.withValues(alpha: 0.6),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  cs.primary.withValues(alpha: 0.15),
+                  cs.primary.withValues(alpha: 0.08),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: cs.primary.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.monitor_heart_outlined,
+              size: 48,
+              color: cs.primary,
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
             'home.empty_glucose_title'.tr(),
             textAlign: TextAlign.center,
             style: TextStyle(
               color: cs.onSurface,
               fontWeight: FontWeight.w800,
-              fontSize: 16,
+              fontSize: 18,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             'home.empty_glucose_subtitle'.tr(),
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: cs.onSurface.withValues(alpha: 0.65),
-              fontSize: 13.5,
+              color: cs.onSurface.withValues(alpha: 0.7),
+              fontSize: 14,
+              height: 1.4,
             ),
           ),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: () =>
-                Navigator.of(context).pushNamed('/a1c_add_glucose_fallback'),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(44),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          const SizedBox(height: 20),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: cs.primary.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: FilledButton.icon(
+              onPressed: () =>
+                  Navigator.of(context).pushNamed('/a1c_add_glucose_fallback'),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+                backgroundColor: cs.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              icon: const Icon(Icons.bloodtype, size: 20),
+              label: Text(
+                'home.empty_glucose_cta'.tr(),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
               ),
             ),
-            icon: const Icon(Icons.bloodtype, size: 18),
-            label: Text('home.empty_glucose_cta'.tr()),
           ),
         ],
       ),
@@ -286,7 +400,7 @@ class _DashboardState extends State<Dashboard> {
                     : 'المستخدم');
 
           return Scaffold(
-            backgroundColor: cs.surface,
+            backgroundColor: cs.surfaceContainerLowest,
             body: SafeArea(
               child: SingleChildScrollView(
                 child: Padding(
@@ -297,150 +411,221 @@ class _DashboardState extends State<Dashboard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Header with name + controls
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                RichText(
-                                  text: TextSpan(
+                      // Header with logo + controls
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              cs.primary.withValues(alpha: 0.08),
+                              cs.secondary.withValues(alpha: 0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: cs.primary.withValues(alpha: 0.1),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: cs.primary.withValues(alpha: 0.15),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'assets/images/logo.png',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    displayNameFallback,
                                     style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w800,
                                       color: cs.onSurface,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 18,
                                     ),
-                                    children: [
-                                      TextSpan(
-                                        text:
-                                            '${'home.welcome'.tr()}, $displayNameFallback ',
-                                      ),
-                                      const WidgetSpan(
-                                        child: Padding(
-                                          padding: EdgeInsets.only(left: 2),
-                                          child: Text(
-                                            '👋',
-                                            style: TextStyle(fontSize: 20),
-                                          ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                _iconSquare(
+                                  icon:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Icons.dark_mode
+                                      : Icons.wb_sunny_outlined,
+                                  onTap: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Toggle theme (hook needed)',
                                         ),
                                       ),
-                                    ],
-                                  ),
+                                    );
+                                  },
                                 ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'home.health_overview'.tr(),
-                                  style: TextStyle(
-                                    color: cs.onSurface.withValues(alpha: 0.65),
-                                    fontSize: 14,
-                                  ),
+                                const SizedBox(width: 8),
+                                _iconSquare(
+                                  icon: Icons.language,
+                                  onTap: _toggleLocale,
+                                ),
+                                const SizedBox(width: 8),
+                                _iconSquare(
+                                  icon: Icons.notifications_outlined,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const RemindersScreen(),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ],
                             ),
-                          ),
-                          Row(
-                            children: [
-                              _iconSquare(
-                                icon:
-                                    Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Icons.dark_mode
-                                    : Icons.wb_sunny_outlined,
-                                onTap: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Toggle theme (hook needed)',
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                              const SizedBox(width: 8),
-                              _iconSquare(
-                                icon: Icons.language,
-                                onTap: _toggleLocale,
-                              ),
-                              const SizedBox(width: 8),
-                              _iconSquare(
-                                icon: Icons.notifications_outlined,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => const RemindersScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
                       // Metrics cards: Latest, Weekly, Meals, A1C
-                      _metricCard(
-                        icon: Icons.bloodtype_outlined,
-                        color: Colors.red.shade600,
-                        title: 'home.latest_reading_title'.tr(),
-                        subtitle: 'home.latest_reading_none'.tr(),
+                      StreamBuilder<List<GlucoseEntry>>(
+                        stream: GlucoseService().recentStream(limit: 1),
+                        builder: (context, latestSnap) {
+                          final latestReading =
+                              latestSnap.data?.isNotEmpty == true
+                              ? '${latestSnap.data!.first.value.toStringAsFixed(0)} ${latestSnap.data!.first.unit == 'mg/dL' ? 'home.mg_dl_unit'.tr() : latestSnap.data!.first.unit}'
+                              : '${'home.latest_reading_none'.tr()} ${'home.mg_dl_unit'.tr()}';
+
+                          return _metricCard(
+                            icon: Icons.bloodtype_outlined,
+                            color: Colors.red.shade600,
+                            title: 'home.latest_reading_title'.tr(),
+                            subtitle: latestReading,
+                          );
+                        },
                       ),
-                      const SizedBox(height: 12),
-                      _metricCard(
-                        icon: Icons.trending_up,
-                        color: cs.primary,
-                        title: 'home.weekly_average_title'.tr(),
-                        subtitle: 'home.weekly_average_none'.tr(),
+                      const SizedBox(height: 14),
+                      StreamBuilder<List<GlucoseEntry>>(
+                        stream: GlucoseService().rangeStream(days: 7),
+                        builder: (context, weeklySnap) {
+                          final entries = weeklySnap.data ?? [];
+                          final weeklyAvg = entries.isNotEmpty
+                              ? entries
+                                        .map((e) => e.value)
+                                        .reduce((a, b) => a + b) /
+                                    entries.length
+                              : null;
+                          final weeklyAvgStr = weeklyAvg != null
+                              ? '${weeklyAvg.toStringAsFixed(0)} ${'home.mg_dl_unit'.tr()}'
+                              : 'home.weekly_average_none'.tr();
+
+                          return _metricCard(
+                            icon: Icons.trending_up,
+                            color: cs.primary,
+                            title: 'home.weekly_average_title'.tr(),
+                            subtitle: weeklyAvgStr,
+                          );
+                        },
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       _metricCard(
                         icon: Icons.lunch_dining,
                         color: Colors.green.shade600,
                         title: 'home.todays_meals_title'.tr(),
                         subtitle: 'home.todays_meals_value'.tr(),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
 
                       // Optional: live A1C summary card (remove if you don't want A1C on Home)
                       A1CCard(),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
                       // Quick actions
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 16,
-                        ),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: cs.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: cs.onSurface.withValues(alpha: 0.1),
-                            width: 1,
+                          gradient: LinearGradient(
+                            colors: [cs.surfaceContainerHighest, cs.surface],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: cs.onSurface.withValues(alpha: 0.15),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: cs.shadow.withValues(alpha: 0.08),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.show_chart, size: 18),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'home.quick_title'.tr(),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    color: cs.onSurface,
-                                  ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    cs.primary.withValues(alpha: 0.1),
+                                    cs.secondary.withValues(alpha: 0.1),
+                                  ],
                                 ),
-                              ],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.flash_on,
+                                    size: 20,
+                                    color: cs.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'home.quick_title'.tr(),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      color: cs.onSurface,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 20),
                             Wrap(
                               alignment: WrapAlignment.center,
                               spacing: 12,
@@ -460,7 +645,7 @@ class _DashboardState extends State<Dashboard> {
                                   label: 'home.quick_add_meal'.tr(),
                                   onTap: () => Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (_) => const MealsScreen(),
+                                      builder: (_) => const MealLogScreen(),
                                     ),
                                   ),
                                 ),
@@ -477,11 +662,25 @@ class _DashboardState extends State<Dashboard> {
                                 ),
                                 _quickActionButton(
                                   icon: Icons.insights,
-                                  color: Colors.blue.shade600,
+                                  color: Colors.purple.shade600,
                                   label: 'home.quick_view_trends'.tr(),
                                   onTap: () => Navigator.of(
                                     context,
                                   ).pushNamed('/trends'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    // NotificationsService.showNotification(body: "body", title: "title", payload: "payload");
+                                  },
+                                  child: const Text('show'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    // NotificationsService.showNotification(body: "body", title: "title", payload: "payload");
+                                    // NotificationsService.showPreiodicNotification(body: "body", title: "timely", payload: "payload");
+                                    // NotificationsService.cancelNotification(1);
+                                  },
+                                  child: const Text('timing a noti'),
                                 ),
                               ],
                             ),
@@ -489,10 +688,159 @@ class _DashboardState extends State<Dashboard> {
                         ),
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
-                      // Empty state CTA
-                      _emptyStateCard(),
+                      // Readings display or empty state
+                      StreamBuilder<List<GlucoseEntry>>(
+                        stream: GlucoseService().recentStream(limit: 10),
+                        builder: (context, glucoseSnap) {
+                          final entries = glucoseSnap.data ?? [];
+
+                          if (entries.isEmpty) {
+                            return _emptyStateCard();
+                          }
+
+                          return Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  cs.primary.withValues(alpha: 0.05),
+                                  cs.secondary.withValues(alpha: 0.08),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: cs.primary.withValues(alpha: 0.2),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: cs.primary.withValues(alpha: 0.1),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.bloodtype_outlined,
+                                      color: cs.primary,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'home.recent_readings_title'.tr(),
+                                      style: TextStyle(
+                                        color: cs.onSurface,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                ListView.separated(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: entries.length,
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(height: 12),
+                                  itemBuilder: (_, index) {
+                                    final entry = entries[index];
+                                    final timestamp = entry.timestamp;
+                                    final formattedDate =
+                                        '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')} - ${timestamp.day}/${timestamp.month}/${timestamp.year}';
+
+                                    return Container(
+                                      padding: const EdgeInsets.all(14),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: cs.onSurface.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              color: Colors.red.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Text(
+                                              entry.value.toStringAsFixed(0),
+                                              style: TextStyle(
+                                                color: Colors.red.shade600,
+                                                fontWeight: FontWeight.w800,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  entry.unit == 'mg/dL'
+                                                      ? 'home.mg_dl_unit'.tr()
+                                                      : entry.unit,
+                                                  style: TextStyle(
+                                                    color: cs.onSurface
+                                                        .withValues(alpha: 0.7),
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  formattedDate,
+                                                  style: TextStyle(
+                                                    color: cs.onSurface
+                                                        .withValues(alpha: 0.5),
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          if (entry.note.isNotEmpty)
+                                            Tooltip(
+                                              message: entry.note,
+                                              child: Icon(
+                                                Icons.note_outlined,
+                                                size: 18,
+                                                color: cs.onSurface.withValues(
+                                                  alpha: 0.5,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -508,16 +856,30 @@ class _DashboardState extends State<Dashboard> {
     final cs = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 38,
-        height: 38,
+        width: 42,
+        height: 42,
         decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: cs.onSurface.withValues(alpha: 0.12)),
+          gradient: LinearGradient(
+            colors: [cs.surface, cs.surfaceContainerHighest],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: cs.onSurface.withValues(alpha: 0.15),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: cs.shadow.withValues(alpha: 0.08),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: Icon(icon, size: 18, color: cs.onSurface),
+        child: Icon(icon, size: 20, color: cs.onSurface),
       ),
     );
   }

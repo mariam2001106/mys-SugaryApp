@@ -619,7 +619,7 @@ class _GlucoseScreenState extends State<GlucoseScreen> {
                                               PopupMenuItem(
                                                 value: 'delete',
                                                 child: Text(
-                                                  'common.delete'.tr(),
+                                                  "common.delete".tr(),
                                                 ),
                                               ),
                                             ],

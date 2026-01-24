@@ -293,7 +293,9 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                       children: [
                         TextButton(
                           style: TextButton.styleFrom(
-                            backgroundColor: cs.onSurface.withValues(alpha: 0.06),
+                            backgroundColor: cs.onSurface.withValues(
+                              alpha: 0.06,
+                            ),
                             shape: const StadiumBorder(),
                             foregroundColor: cs.onSurface,
                             padding: const EdgeInsets.symmetric(
@@ -481,7 +483,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                     textDirection: Directionality.of(context),
                     decoration: InputDecoration(
                       labelText: 'setup.very_high'.tr(),
-                      suffixText: 'mg/dL',
+                      suffixText: 'home.mg_dl_unit'.tr(),
                     ),
                   ),
                 ),
@@ -493,7 +495,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                     textDirection: Directionality.of(context),
                     decoration: InputDecoration(
                       labelText: 'setup.very_low'.tr(),
-                      suffixText: 'mg/dL',
+                      suffixText: 'home.mg_dl_unit'.tr(),
                     ),
                   ),
                 ),
@@ -510,7 +512,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                     textDirection: Directionality.of(context),
                     decoration: InputDecoration(
                       labelText: 'setup.target_min'.tr(),
-                      suffixText: 'mg/dL',
+                      suffixText: 'home.mg_dl_unit'.tr(),
                     ),
                   ),
                 ),
@@ -522,7 +524,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                     textDirection: Directionality.of(context),
                     decoration: InputDecoration(
                       labelText: 'setup.target_max'.tr(),
-                      suffixText: 'mg/dL',
+                      suffixText: 'home.mg_dl_unit'.tr(),
                     ),
                   ),
                 ),
@@ -560,7 +562,10 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
         textAlign: Directionality.of(context) == fr.TextDirection.rtl
             ? TextAlign.right
             : TextAlign.left,
-        style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.7)),
+        style: TextStyle(
+          fontSize: 14,
+          color: cs.onSurface.withValues(alpha: 0.7),
+        ),
       ),
       const SizedBox(height: 18),
       ...children,

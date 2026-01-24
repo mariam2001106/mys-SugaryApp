@@ -34,6 +34,12 @@ class ProfileService {
     return _userDoc(uid).get(GetOptions(source: Source.server));
   }
 
+  /// Convenience: get raw user data from server without exposing Firestore types.
+  Future<Map<String, dynamic>?> getUserDataFromServer(String uid) async {
+    final snap = await _userDoc(uid).get(GetOptions(source: Source.server));
+    return snap.data();
+  }
+
   Stream<UserProfile?> streamProfile(String uid) {
     return _userDoc(uid).snapshots().map((s) {
       if (!s.exists) return null;
