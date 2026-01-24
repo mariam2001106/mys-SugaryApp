@@ -5,10 +5,23 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 class NotificationsService {
+  // Singleton pattern
+  static final NotificationsService _instance = NotificationsService._internal();
+  
+  factory NotificationsService() {
+    return _instance;
+  }
+  
+  NotificationsService._internal();
+
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
+  
+  bool _isInitialized = false;
 
   Future<void> init() async {
+    if (_isInitialized) return;
+
     await _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
@@ -26,10 +39,15 @@ class NotificationsService {
 
     // Initialize timezone database for zoned scheduling
     tzdata.initializeTimeZones();
+    
+    _isInitialized = true;
   }
 
   /// Schedule reminder using inexact modes (battery-friendly) based on frequency.
   Future<void> scheduleReminder(ReminderItemDto reminder) async {
+    // Ensure the service is initialized
+    await init();
+    
     if (!reminder.enabled) return;
 
     final parts = reminder.time.split(':');
