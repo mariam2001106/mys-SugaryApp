@@ -138,8 +138,6 @@ class NotificationsService {
             _details(),
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
             matchDateTimeComponents: DateTimeComponents.time,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
           );
           debugPrint('✓ Daily notification scheduled successfully');
           break;
@@ -152,8 +150,7 @@ class NotificationsService {
             _details(),
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
             matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
+
           );
           debugPrint('✓ Weekly notification scheduled successfully');
           break;
@@ -166,8 +163,7 @@ class NotificationsService {
             _details(),
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
             matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
+
           );
           debugPrint('✓ Monthly notification scheduled successfully');
           break;
