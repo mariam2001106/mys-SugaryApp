@@ -143,8 +143,8 @@ class _MealLogScreenState extends State<MealLogScreen> {
                       quantity: q,
                       unit: base.unit,
                     );
-                    setState(() => _selectedItems.add(item));
                     Navigator.pop(ctx);
+                    setState(() => _selectedItems.add(item));
                   },
                   child: Text('meals.add_button'.tr()),
                 ),
@@ -282,6 +282,7 @@ class _MealLogScreenState extends State<MealLogScreen> {
                           );
                           return;
                         }
+                        Navigator.pop(ctx);
                         setState(() {
                           _selectedItems.add(
                             FoodItem(
@@ -293,7 +294,6 @@ class _MealLogScreenState extends State<MealLogScreen> {
                             ),
                           );
                         });
-                        Navigator.pop(ctx);
                       },
                       child: Text('meals.add_button'.tr()),
                     ),
