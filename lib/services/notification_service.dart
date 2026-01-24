@@ -101,14 +101,20 @@ class NotificationsService {
   }
 
   Future<void> cancelReminder(ReminderItemDto reminder) async {
+    // Ensure the service is initialized
+    await init();
     await _plugin.cancel(reminder.id.hashCode);
   }
 
   Future<void> cancelReminderById(String id) async {
+    // Ensure the service is initialized
+    await init();
     await _plugin.cancel(id.hashCode);
   }
 
   Future<void> rescheduleAll(List<ReminderItemDto> reminders) async {
+    // Ensure the service is initialized once before rescheduling all
+    await init();
     for (final r in reminders) {
       if (r.enabled) {
         await scheduleReminder(r);
