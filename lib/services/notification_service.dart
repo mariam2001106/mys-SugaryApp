@@ -117,24 +117,31 @@ class NotificationsService {
     final id = reminder.id.hashCode;
     debugPrint('Notification ID (hashCode): $id');
 
-    // Create scheduled time using local DateTime first
-    final now = DateTime.now();
-    debugPrint('Current time: $now');
+    // Get current time and create scheduled time directly as TZDateTime in local timezone
+    final now = tz.TZDateTime.now(tz.local);
+    debugPrint('Current time (TZ): $now');
+    debugPrint('Local timezone: ${now.location.name}');
     
-    var scheduledDate = DateTime(now.year, now.month, now.day, hour, minute);
-    debugPrint('Initial scheduled date: $scheduledDate');
+    // Create the scheduled time for today
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
+    debugPrint('Initial scheduled date (TZ): $scheduledDate');
     
     // If the scheduled time has passed today, schedule for tomorrow
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
-      debugPrint('Time has passed, rescheduled for tomorrow: $scheduledDate');
+      debugPrint('Time has passed, rescheduled for tomorrow (TZ): $scheduledDate');
     }
     
-    // Convert to TZDateTime in UTC timezone (the local DateTime already has correct local time)
-    final tzScheduledDate = tz.TZDateTime.from(scheduledDate, tz.local);
-    debugPrint('TZDateTime scheduled date: $tzScheduledDate');
-    debugPrint('TZDateTime location: ${tzScheduledDate.location}');
-    debugPrint('TZDateTime timezone: ${tzScheduledDate.timeZoneName}');
+    debugPrint('Final TZDateTime scheduled date: $scheduledDate');
+    debugPrint('TZDateTime location: ${scheduledDate.location}');
+    debugPrint('TZDateTime timezone: ${scheduledDate.timeZoneName}');
 
     final title = reminder.title;
     final body = 'Reminder at ${reminder.time}';
@@ -142,48 +149,47 @@ class NotificationsService {
     try {
       switch (reminder.frequency) {
         case ReminderFrequency.daily:
-          // For daily reminders, first schedule the immediate occurrence
+          // For daily reminders, schedule with exact mode
           await _plugin.zonedSchedule(
             id,
             title,
             body,
-            tzScheduledDate,
+            scheduledDate,
             _details(),
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-            matchDateTimeComponents: DateTimeComponents.time,
-           
+            androidScheduleMode: AndroidScheduleMode.exact,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
           );
           debugPrint('✓ Daily notification scheduled successfully (using exact mode)');
-          debugPrint('  Will fire at: $tzScheduledDate');
-          // Note: matchDateTimeComponents.time would make it repeat, but let's test one-time first
+          debugPrint('  Will fire at: $scheduledDate');
           break;
         case ReminderFrequency.weekly:
           await _plugin.zonedSchedule(
             id,
             title,
             body,
-            tzScheduledDate,
+            scheduledDate,
             _details(),
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-            matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-            
+            androidScheduleMode: AndroidScheduleMode.exact,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
           );
           debugPrint('✓ Weekly notification scheduled successfully (using exact mode)');
-          debugPrint('  Will fire at: $tzScheduledDate');
+          debugPrint('  Will fire at: $scheduledDate');
           break;
         case ReminderFrequency.monthly:
           await _plugin.zonedSchedule(
             id,
             title,
             body,
-            tzScheduledDate,
+            scheduledDate,
             _details(),
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-            matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
-           
+            androidScheduleMode: AndroidScheduleMode.exact,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
           );
           debugPrint('✓ Monthly notification scheduled successfully (using exact mode)');
-          debugPrint('  Will fire at: $tzScheduledDate');
+          debugPrint('  Will fire at: $scheduledDate');
           break;
       }
       debugPrint('=== Scheduling Complete ===\n');
