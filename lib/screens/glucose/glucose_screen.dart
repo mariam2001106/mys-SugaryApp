@@ -384,7 +384,7 @@ class _GlucoseScreenState extends State<GlucoseScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.bloodtype, color: Colors.red),
+                            Icon(Icons.bloodtype, color: Theme.of(context).colorScheme.error),
                             const SizedBox(width: 8),
                             Text(
                               'glucose.add_title'.tr(),

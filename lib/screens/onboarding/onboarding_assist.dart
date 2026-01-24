@@ -226,7 +226,7 @@ class _SmartAssistState extends State<SmartAssist> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black.withValues(alpha: .55),
+      color: Theme.of(context).colorScheme.scrim.withValues(alpha: .7),
       child: Center(child: _addRemindersCard()),
     );
   }

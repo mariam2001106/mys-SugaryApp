@@ -787,7 +787,7 @@ class _MealLogScreenState extends State<MealLogScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
+                                  color: cs.shadow.withOpacity(0.03),
                                   blurRadius: 6,
                                   offset: const Offset(0, 3),
                                 ),
@@ -873,9 +873,9 @@ class _MealLogScreenState extends State<MealLogScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.restaurant_outlined,
-                                color: Colors.grey,
+                                color: cs.onSurfaceVariant,
                               ),
                               const SizedBox(width: 6),
                               Expanded(
