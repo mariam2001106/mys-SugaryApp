@@ -40,7 +40,17 @@ class NotificationsService {
     // Initialize timezone database for zoned scheduling
     tzdata.initializeTimeZones();
     // Set the local timezone location - critical for tz.local to work
-    tz.setLocalLocation(tz.getLocation('UTC'));
+    // We use the device's local timezone offset to find the best matching timezone
+    final currentLocation = DateTime.now().timeZoneOffset;
+    final timeZoneName = currentLocation.isNegative 
+        ? 'Etc/GMT+${currentLocation.inHours.abs()}'
+        : 'Etc/GMT-${currentLocation.inHours}';
+    try {
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+    } catch (_) {
+      // Fallback to UTC if timezone not found
+      tz.setLocalLocation(tz.getLocation('UTC'));
+    }
     
     _isInitialized = true;
   }
