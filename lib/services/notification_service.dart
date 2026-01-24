@@ -53,27 +53,29 @@ class NotificationsService {
     
     if (!reminder.enabled) return;
 
+    // Validate time format
     final parts = reminder.time.split(':');
-    final hour = int.parse(parts[0]);
-    final minute = int.parse(parts[1]);
+    if (parts.length != 2) return;
+    
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      return;
+    }
+    
     final id = reminder.id.hashCode;
 
-    // Get current time in local timezone
-    final now = tz.TZDateTime.now(tz.local);
-    // Create scheduled time in local timezone
-    var scheduledDate = tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      hour,
-      minute,
-    );
+    // Create scheduled time using local DateTime first
+    final now = DateTime.now();
+    var scheduledDate = DateTime(now.year, now.month, now.day, hour, minute);
     
     // If the scheduled time has passed today, schedule for tomorrow
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
+    
+    // Convert to TZDateTime in UTC timezone (the local DateTime already has correct local time)
+    final tzScheduledDate = tz.TZDateTime.from(scheduledDate, tz.local);
 
     final title = reminder.title;
     final body = 'Reminder at ${reminder.time}';
@@ -84,7 +86,7 @@ class NotificationsService {
           id,
           title,
           body,
-          scheduledDate,
+          tzScheduledDate,
           _details(),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.time,
@@ -97,7 +99,7 @@ class NotificationsService {
           id,
           title,
           body,
-          scheduledDate,
+          tzScheduledDate,
           _details(),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
@@ -110,7 +112,7 @@ class NotificationsService {
           id,
           title,
           body,
-          scheduledDate,
+          tzScheduledDate,
           _details(),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
