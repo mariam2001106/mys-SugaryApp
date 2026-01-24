@@ -3,7 +3,7 @@
     <!-- Exact alarm permission (Android 12+) -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     
-    <!-- For Android 14+ (API 34+), apps that target Android 14 need USE_EXACT_ALARM -->
+    <!-- For Android 14 (API 34)+, apps that target Android 14 need USE_EXACT_ALARM -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
 
     <!-- Needed to reschedule notifications after reboot -->

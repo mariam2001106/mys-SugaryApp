@@ -179,17 +179,31 @@ class _RemindersScreenState extends State<RemindersScreen> {
     if (_editingIndex == null) {
       final newId = await _svc.addReminder(_uid!, dto);
       final created = dto.copyWith(id: newId);
-      await NotificationsService().scheduleReminder(created);
-      // Verify notification was scheduled
-      await NotificationsService().getPendingNotifications();
+      try {
+        await NotificationsService().scheduleReminder(created);
+        // Verify notification was scheduled
+        await NotificationsService().getPendingNotifications();
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error scheduling notification: $e')),
+        );
+      }
       if (!mounted) return;
       setState(() => _items.add(created));
     } else {
       await _svc.updateReminder(_uid!, dto);
-      await NotificationsService().cancelReminder(_items[_editingIndex!]);
-      await NotificationsService().scheduleReminder(dto);
-      // Verify notification was scheduled
-      await NotificationsService().getPendingNotifications();
+      try {
+        await NotificationsService().cancelReminder(_items[_editingIndex!]);
+        await NotificationsService().scheduleReminder(dto);
+        // Verify notification was scheduled
+        await NotificationsService().getPendingNotifications();
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error scheduling notification: $e')),
+        );
+      }
       if (!mounted) return;
       setState(() => _items[_editingIndex!] = dto);
     }

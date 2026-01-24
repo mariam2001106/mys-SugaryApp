@@ -30,7 +30,7 @@ class NotificationsService {
         ?.requestNotificationsPermission();
     debugPrint('Notification permission granted: $notificationPermission');
     
-    // Request exact alarm permissions (Android 12+)
+    // Request exact alarm permissions (Android 12+ / API 31+)
     final exactAlarmPermission = await _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
@@ -176,6 +176,8 @@ class NotificationsService {
     } catch (e, stackTrace) {
       debugPrint('✗ ERROR scheduling notification: $e');
       debugPrint('Stack trace: $stackTrace');
+      // Rethrow so calling code can handle the error
+      rethrow;
     }
   }
 
