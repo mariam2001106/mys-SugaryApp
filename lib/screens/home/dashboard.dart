@@ -523,7 +523,7 @@ class _DashboardState extends State<Dashboard> {
 
                           return _metricCard(
                             icon: Icons.bloodtype_outlined,
-                            color: Colors.red.shade600,
+                            color: cs.error,
                             title: 'home.latest_reading_title'.tr(),
                             subtitle: latestReading,
                           );
@@ -555,7 +555,7 @@ class _DashboardState extends State<Dashboard> {
                       const SizedBox(height: 14),
                       _metricCard(
                         icon: Icons.lunch_dining,
-                        color: Colors.green.shade600,
+                        color: cs.secondary,
                         title: 'home.todays_meals_title'.tr(),
                         subtitle: 'home.todays_meals_value'.tr(),
                       ),
@@ -633,7 +633,7 @@ class _DashboardState extends State<Dashboard> {
                               children: [
                                 _quickActionButton(
                                   icon: Icons.bloodtype,
-                                  color: Colors.red.shade600,
+                                  color: cs.error,
                                   label: 'home.quick_add_glucose'.tr(),
                                   onTap: () => Navigator.of(
                                     context,
@@ -641,7 +641,7 @@ class _DashboardState extends State<Dashboard> {
                                 ),
                                 _quickActionButton(
                                   icon: Icons.lunch_dining,
-                                  color: Colors.green.shade600,
+                                  color: cs.secondary,
                                   label: 'home.quick_add_meal'.tr(),
                                   onTap: () => Navigator.of(context).push(
                                     MaterialPageRoute(
@@ -651,7 +651,7 @@ class _DashboardState extends State<Dashboard> {
                                 ),
                                 _quickActionButton(
                                   icon: Icons.calculate_outlined,
-                                  color: Colors.blue.shade600,
+                                  color: cs.primary,
                                   label: 'a1c.title'.tr(),
                                   onTap: () => Navigator.of(context).push(
                                     MaterialPageRoute(
@@ -662,7 +662,7 @@ class _DashboardState extends State<Dashboard> {
                                 ),
                                 _quickActionButton(
                                   icon: Icons.insights,
-                                  color: Colors.purple.shade600,
+                                  color: cs.tertiary,
                                   label: 'home.quick_view_trends'.tr(),
                                   onTap: () => Navigator.of(
                                     context,
@@ -777,7 +777,7 @@ class _DashboardState extends State<Dashboard> {
                                           Container(
                                             padding: const EdgeInsets.all(10),
                                             decoration: BoxDecoration(
-                                              color: Colors.red.withValues(
+                                              color: cs.error.withValues(
                                                 alpha: 0.1,
                                               ),
                                               borderRadius:
@@ -786,7 +786,7 @@ class _DashboardState extends State<Dashboard> {
                                             child: Text(
                                               entry.value.toStringAsFixed(0),
                                               style: TextStyle(
-                                                color: Colors.red.shade600,
+                                                color: cs.error,
                                                 fontWeight: FontWeight.w800,
                                                 fontSize: 16,
                                               ),
