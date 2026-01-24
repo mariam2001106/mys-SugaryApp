@@ -5,10 +5,18 @@ import 'package:flutter/material.dart';
 
 class FirestoreTrendChart extends StatelessWidget {
   final int selectedHours;
+  final int veryLow;
+  final int targetMin;
+  final int targetMax;
+  final int veryHigh;
 
   const FirestoreTrendChart({
     Key? key,
     required this.selectedHours,
+    required this.veryLow,
+    required this.targetMin,
+    required this.targetMax,
+    required this.veryHigh,
   }) : super(key: key);
 
   @override
@@ -74,13 +82,17 @@ class FirestoreTrendChart extends StatelessWidget {
                       showTitles: true,
                       reservedSize: 56,
                       getTitlesWidget: (value, _) {
-                        switch (value.toInt()) {
-                          case 70: return const Text("veryLow", style: TextStyle(fontSize: 11));
-                          case 80: return const Text("targetMin", style: TextStyle(fontSize: 11));
-                          case 130: return const Text("targetMax", style: TextStyle(fontSize: 11));
-                          case 180: return const Text("veryHigh", style: TextStyle(fontSize: 11));
-                          default: return const Text("");
+                        final intValue = value.toInt();
+                        if (intValue == veryLow) {
+                          return const Text("veryLow", style: TextStyle(fontSize: 11));
+                        } else if (intValue == targetMin) {
+                          return const Text("targetMin", style: TextStyle(fontSize: 11));
+                        } else if (intValue == targetMax) {
+                          return const Text("targetMax", style: TextStyle(fontSize: 11));
+                        } else if (intValue == veryHigh) {
+                          return const Text("veryHigh", style: TextStyle(fontSize: 11));
                         }
+                        return const Text("");
                       },
                       interval: 10,
                     ),
@@ -89,7 +101,7 @@ class FirestoreTrendChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 40,
-                      interval: 1,
+                      interval: spots.length > 10 ? (spots.length / 5).ceilToDouble() : 1,
                       getTitlesWidget: (value, _) {
                         int idx = value.toInt();
                         return Padding(

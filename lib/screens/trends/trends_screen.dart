@@ -137,7 +137,13 @@ class _TrendScreenState extends State<TrendScreen> {
             side: BorderSide(color: Colors.grey.shade300),
           ),
           elevation: 1,
-          child: FirestoreTrendChart(selectedHours: _selectedHours),
+          child: FirestoreTrendChart(
+            selectedHours: _selectedHours,
+            veryLow: g.veryLow,
+            targetMin: g.targetMin,
+            targetMax: g.targetMax,
+            veryHigh: g.veryHigh,
+          ),
         ),
       ),
     );
