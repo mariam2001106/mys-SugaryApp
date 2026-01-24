@@ -63,6 +63,14 @@ class FirestoreTrendChart extends StatelessWidget {
           hourLabels.add("${dt.hour.toString().padLeft(2, '0')}:00");
         }
 
+        // Calculate dynamic Y-axis bounds
+        final minSpotY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
+        final maxSpotY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+        final minY = [minSpotY, veryLow.toDouble()].reduce((a, b) => a < b ? a : b) - 20;
+        final maxY = [maxSpotY, veryHigh.toDouble()].reduce((a, b) => a > b ? a : b) + 20;
+        final yRange = maxY - minY;
+        final yInterval = yRange / 10;
+
         return AspectRatio(
           aspectRatio: 1.7,
           child: Padding(
@@ -71,8 +79,8 @@ class FirestoreTrendChart extends StatelessWidget {
               LineChartData(
                 minX: 0,
                 maxX: (spots.length - 1).toDouble(),
-                minY: 0,
-                maxY: 300,
+                minY: minY,
+                maxY: maxY,
                 gridData: FlGridData(show: true),
                 titlesData: FlTitlesData(
                   topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -94,7 +102,7 @@ class FirestoreTrendChart extends StatelessWidget {
                         }
                         return const Text("");
                       },
-                      interval: 10,
+                      interval: yInterval,
                     ),
                   ),
                   bottomTitles: AxisTitles(
