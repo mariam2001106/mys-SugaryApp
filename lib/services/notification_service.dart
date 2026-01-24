@@ -40,17 +40,8 @@ class NotificationsService {
     // Initialize timezone database for zoned scheduling
     tzdata.initializeTimeZones();
     // Set the local timezone location - critical for tz.local to work
-    // We use the device's local timezone offset to find the best matching timezone
-    final currentLocation = DateTime.now().timeZoneOffset;
-    final timeZoneName = currentLocation.isNegative 
-        ? 'Etc/GMT+${currentLocation.inHours.abs()}'
-        : 'Etc/GMT-${currentLocation.inHours}';
-    try {
-      tz.setLocalLocation(tz.getLocation(timeZoneName));
-    } catch (_) {
-      // Fallback to UTC if timezone not found
-      tz.setLocalLocation(tz.getLocation('UTC'));
-    }
+    // Use UTC as the base - the DateTime objects are already in local time
+    tz.setLocalLocation(tz.getLocation('UTC'));
     
     _isInitialized = true;
   }
@@ -67,11 +58,23 @@ class NotificationsService {
     final minute = int.parse(parts[1]);
     final id = reminder.id.hashCode;
 
-    final now = DateTime.now();
-    var base = DateTime(now.year, now.month, now.day, hour, minute);
-    if (base.isBefore(now)) base = base.add(const Duration(days: 1));
+    // Get current time in local timezone
+    final now = tz.TZDateTime.now(tz.local);
+    // Create scheduled time in local timezone
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
+    
+    // If the scheduled time has passed today, schedule for tomorrow
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
 
-    final tzBase = tz.TZDateTime.from(base, tz.local);
     final title = reminder.title;
     final body = 'Reminder at ${reminder.time}';
 
@@ -81,7 +84,7 @@ class NotificationsService {
           id,
           title,
           body,
-          tzBase,
+          scheduledDate,
           _details(),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.time,
@@ -94,7 +97,7 @@ class NotificationsService {
           id,
           title,
           body,
-          tzBase,
+          scheduledDate,
           _details(),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
@@ -107,7 +110,7 @@ class NotificationsService {
           id,
           title,
           body,
-          tzBase,
+          scheduledDate,
           _details(),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
