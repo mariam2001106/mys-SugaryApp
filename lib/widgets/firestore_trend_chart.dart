@@ -27,6 +27,18 @@ class FirestoreTrendChart extends StatelessWidget {
     }
 
     final since = DateTime.now().toUtc().subtract(Duration(hours: selectedHours));
+    
+    // Get theme-aware colors
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.colorScheme.onSurface;
+    final gridColor = isDark ? Colors.white.withOpacity(0.1) : Colors.grey.withOpacity(0.2);
+    final borderColor = theme.colorScheme.outline;
+    
+    // Use theme-appropriate gradient colors
+    final gradientColors = isDark
+        ? [const Color(0xFF9C27B0), const Color(0xFFE91E63)] // Softer purple/pink for dark mode
+        : [Colors.deepPurple, Colors.pinkAccent]; // Original vibrant colors for light mode
 
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -81,7 +93,22 @@ class FirestoreTrendChart extends StatelessWidget {
                 maxX: (spots.length - 1).toDouble(),
                 minY: minY,
                 maxY: maxY,
-                gridData: FlGridData(show: true),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: true,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: gridColor,
+                      strokeWidth: 1,
+                    );
+                  },
+                  getDrawingVerticalLine: (value) {
+                    return FlLine(
+                      color: gridColor,
+                      strokeWidth: 1,
+                    );
+                  },
+                ),
                 titlesData: FlTitlesData(
                   topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -92,13 +119,13 @@ class FirestoreTrendChart extends StatelessWidget {
                       getTitlesWidget: (value, _) {
                         final intValue = value.toInt();
                         if (intValue == veryLow) {
-                          return const Text("veryLow", style: TextStyle(fontSize: 11));
+                          return Text("veryLow", style: TextStyle(fontSize: 11, color: textColor));
                         } else if (intValue == targetMin) {
-                          return const Text("targetMin", style: TextStyle(fontSize: 11));
+                          return Text("targetMin", style: TextStyle(fontSize: 11, color: textColor));
                         } else if (intValue == targetMax) {
-                          return const Text("targetMax", style: TextStyle(fontSize: 11));
+                          return Text("targetMax", style: TextStyle(fontSize: 11, color: textColor));
                         } else if (intValue == veryHigh) {
-                          return const Text("veryHigh", style: TextStyle(fontSize: 11));
+                          return Text("veryHigh", style: TextStyle(fontSize: 11, color: textColor));
                         }
                         return const Text("");
                       },
@@ -118,7 +145,7 @@ class FirestoreTrendChart extends StatelessWidget {
                             angle: -0.45,
                             child: Text(
                               idx >= 0 && idx < hourLabels.length ? hourLabels[idx] : '',
-                              style: const TextStyle(fontSize: 11),
+                              style: TextStyle(fontSize: 11, color: textColor),
                             ),
                           ),
                         );
@@ -126,12 +153,15 @@ class FirestoreTrendChart extends StatelessWidget {
                     ),
                   ),
                 ),
-                borderData: FlBorderData(show: true),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(color: borderColor, width: 1),
+                ),
                 lineBarsData: [
                   LineChartBarData(
                     spots: spots,
                     isCurved: true,
-                    gradient: const LinearGradient(colors: [Colors.deepPurple, Colors.pinkAccent]),
+                    gradient: LinearGradient(colors: gradientColors),
                     barWidth: 4,
                     isStrokeCapRound: true,
                     dotData: FlDotData(show: false),
@@ -139,8 +169,8 @@ class FirestoreTrendChart extends StatelessWidget {
                       show: true,
                       gradient: LinearGradient(
                         colors: [
-                          Colors.deepPurple.withOpacity(0.2),
-                          Colors.pinkAccent.withOpacity(0.1),
+                          gradientColors[0].withOpacity(0.2),
+                          gradientColors[1].withOpacity(0.1),
                         ],
                       ),
                     ),

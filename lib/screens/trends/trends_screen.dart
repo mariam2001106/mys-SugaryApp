@@ -134,7 +134,7 @@ class _TrendScreenState extends State<TrendScreen> {
         child: Card(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: Colors.grey.shade300),
+            side: BorderSide(color: Theme.of(context).colorScheme.outline),
           ),
           elevation: 1,
           child: FirestoreTrendChart(
@@ -153,7 +153,7 @@ class _TrendScreenState extends State<TrendScreen> {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade300),
+        side: BorderSide(color: Theme.of(context).colorScheme.outline),
       ),
       child: SizedBox(
         height: 240,
