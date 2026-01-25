@@ -561,7 +561,7 @@ class _DashboardState extends State<Dashboard> {
                           final todaysMeals = mealSnap.data ?? [];
                           final mealCount = todaysMeals.length;
                           final mealCountStr = mealCount > 0
-                              ? '$mealCount ${mealCount == 1 ? 'meal' : 'meals'}'
+                              ? '$mealCount ${mealCount == 1 ? 'home.meal_singular'.tr() : 'home.meal_plural'.tr()}'
                               : 'home.todays_meals_value'.tr();
 
                           return _metricCard(

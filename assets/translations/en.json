@@ -66,6 +66,8 @@
         "quick_view_trends": "View Trends",
         "recent_readings_title": "Recent Readings",
         "recent_meals_title": "Recent Meals",
+        "meal_singular": "meal",
+        "meal_plural": "meals",
         "mg_dl_unit": "mg/dL",
         "empty_glucose_title": "Add your first glucose reading",
         "empty_glucose_subtitle": "Start your glucose monitoring journey by adding your first reading",
