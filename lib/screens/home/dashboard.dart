@@ -5,11 +5,13 @@ import 'package:easy_localization/easy_localization.dart';
 
 import 'package:mysugaryapp/models/user_profile.dart';
 import 'package:mysugaryapp/models/glucose_entry_model.dart';
+import 'package:mysugaryapp/models/meals_enrty_model.dart';
 import 'package:mysugaryapp/screens/meals/meals.screen.dart';
 import 'package:mysugaryapp/screens/reminders/reminders_screen.dart';
 import 'package:mysugaryapp/screens/setup/personal_setup_wizerd.dart';
 import 'package:mysugaryapp/services/profile_service.dart';
 import 'package:mysugaryapp/services/glucose_service.dart';
+import 'package:mysugaryapp/services/meal_service.dart';
 
 // A1C calculator + optional A1C summary card
 import 'package:mysugaryapp/screens/trends/a1c_calculator_screen.dart';
@@ -553,11 +555,22 @@ class _DashboardState extends State<Dashboard> {
                         },
                       ),
                       const SizedBox(height: 14),
-                      _metricCard(
-                        icon: Icons.lunch_dining,
-                        color: Colors.green.shade600,
-                        title: 'home.todays_meals_title'.tr(),
-                        subtitle: 'home.todays_meals_value'.tr(),
+                      StreamBuilder<List<MealEntry>>(
+                        stream: MealService().rangeStream(hours: 24),
+                        builder: (context, mealSnap) {
+                          final todaysMeals = mealSnap.data ?? [];
+                          final mealCount = todaysMeals.length;
+                          final mealCountStr = mealCount > 0
+                              ? '$mealCount ${mealCount == 1 ? 'meal' : 'meals'}'
+                              : 'home.todays_meals_value'.tr();
+
+                          return _metricCard(
+                            icon: Icons.lunch_dining,
+                            color: Colors.green.shade600,
+                            title: 'home.todays_meals_title'.tr(),
+                            subtitle: mealCountStr,
+                          );
+                        },
                       ),
                       const SizedBox(height: 14),
 
@@ -831,6 +844,211 @@ class _DashboardState extends State<Dashboard> {
                                                 ),
                                               ),
                                             ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Recent Meal Logs with Insulin Suggestions
+                      StreamBuilder<List<MealEntry>>(
+                        stream: MealService().recentStream(limit: 5),
+                        builder: (context, mealSnap) {
+                          final meals = mealSnap.data ?? [];
+
+                          if (meals.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+
+                          return Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.green.shade50,
+                                  Colors.green.shade100.withValues(alpha: 0.3),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.green.shade300,
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.green.withValues(alpha: 0.1),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.lunch_dining,
+                                      color: Colors.green.shade700,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'home.recent_meals_title'.tr(),
+                                      style: TextStyle(
+                                        color: cs.onSurface,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                ListView.separated(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: meals.length,
+                                  separatorBuilder: (_, __) => Divider(
+                                    height: 20,
+                                    color: Colors.green.shade200,
+                                  ),
+                                  itemBuilder: (context, index) {
+                                    final meal = meals[index];
+                                    final dateFmt = DateFormat.yMMMd(
+                                      context.locale.languageCode,
+                                    );
+                                    final timeFmt = DateFormat.jm();
+                                    final formattedDate =
+                                        '${dateFmt.format(meal.timestamp)} • ${timeFmt.format(meal.timestamp)}';
+
+                                    return Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.7),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Colors.green.shade200,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  meal.name,
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: cs.onSurface,
+                                                  ),
+                                                ),
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 4,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.green.shade100,
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  meal.type.name.toUpperCase(),
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.green.shade800,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            formattedDate,
+                                            style: TextStyle(
+                                              color: cs.onSurface
+                                                  .withValues(alpha: 0.6),
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.restaurant,
+                                                size: 16,
+                                                color: Colors.green.shade700,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                '${meal.totalCarbs}g carbs',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: cs.onSurface,
+                                                ),
+                                              ),
+                                              if (meal.insulinUnitsSuggested != null) ...[
+                                                const SizedBox(width: 12),
+                                                Icon(
+                                                  Icons.arrow_forward,
+                                                  size: 16,
+                                                  color: Colors.green.shade700,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  'Suggested insulin: ${meal.insulinUnitsSuggested!.toStringAsFixed(2)} units',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Colors.green.shade800,
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                          if (meal.note != null && meal.note!.isNotEmpty) ...[
+                                            const SizedBox(height: 8),
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.note_outlined,
+                                                  size: 14,
+                                                  color: cs.onSurface
+                                                      .withValues(alpha: 0.5),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: Text(
+                                                    meal.note!,
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: cs.onSurface
+                                                          .withValues(alpha: 0.7),
+                                                      fontStyle: FontStyle.italic,
+                                                    ),
+                                                    maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
                                         ],
                                       ),
                                     );

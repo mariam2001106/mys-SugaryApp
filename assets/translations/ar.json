@@ -37,6 +37,7 @@
     },
     "home": {
         "recent_readings_title": "قراءات ",
+        "recent_meals_title": "الوجبات الأخيرة",
         "health_overview": "نظرة عامة على الصحة",
         "latest_reading_title": "أحدث قراءة",
         "latest_reading_none": "لا توجد قراءات بعد",
