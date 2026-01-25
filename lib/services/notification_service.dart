@@ -20,7 +20,10 @@ class NotificationsService {
   bool _isInitialized = false;
 
   Future<void> init() async {
-    await _plugin
+    if (_isInitialized) return;
+
+    // Request notification permissions
+    final notificationPermission = await _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >()
@@ -70,11 +73,61 @@ class NotificationsService {
 
     // Initialize timezone database for zoned scheduling
     tzdata.initializeTimeZones();
+    
+    // Get the device's timezone offset and set tz.local accordingly
+    final deviceOffset = DateTime.now().timeZoneOffset;
+    final offsetHours = deviceOffset.inHours;
+    final offsetMinutes = deviceOffset.inMinutes.remainder(60);
+    
+    // Try to find a timezone that matches the device offset
+    // Common timezone patterns based on offset
+    String timezoneName;
+    try {
+      // For whole hour offsets, try standard timezone names
+      if (offsetMinutes == 0) {
+        // Try common timezone names based on offset
+        if (offsetHours >= -12 && offsetHours <= 14) {
+          // Use Etc/GMT notation (note: signs are inverted in Etc/GMT)
+          // UTC+2 is Etc/GMT-2
+          timezoneName = offsetHours <= 0 
+              ? 'Etc/GMT+${offsetHours.abs()}'
+              : 'Etc/GMT-$offsetHours';
+          tz.setLocalLocation(tz.getLocation(timezoneName));
+          debugPrint('Timezone set to: $timezoneName (offset: $deviceOffset)');
+        } else {
+          // Fallback to UTC if offset is out of range
+          tz.setLocalLocation(tz.getLocation('UTC'));
+          debugPrint('Timezone offset out of range, using UTC');
+        }
+      } else {
+        // For fractional offsets, fall back to UTC
+        tz.setLocalLocation(tz.getLocation('UTC'));
+        debugPrint('Fractional timezone offset detected, using UTC');
+      }
+    } catch (e) {
+      // If timezone lookup fails, use UTC as fallback
+      tz.setLocalLocation(tz.getLocation('UTC'));
+      debugPrint('Timezone lookup failed, using UTC. Error: $e');
+    }
+    
+    debugPrint('Final tz.local: ${tz.local.name}');
+    debugPrint('NotificationsService initialized successfully');
+    
+    _isInitialized = true;
   }
 
   /// Schedule reminder using inexact modes (battery-friendly) based on frequency.
   Future<void> scheduleReminder(ReminderItemDto reminder) async {
+    await init();
+    
     if (!reminder.enabled) return;
+
+    debugPrint('=== Scheduling Reminder ===');
+    debugPrint('ID: ${reminder.id}');
+    debugPrint('Title: ${reminder.title}');
+    debugPrint('Time: ${reminder.time}');
+    debugPrint('Enabled: ${reminder.enabled}');
+    debugPrint('Frequency: ${reminder.frequency}');
 
     final parts = reminder.time.split(':');
     if (parts.length != 2) {
@@ -132,7 +185,8 @@ class NotificationsService {
             scheduledDate,
             _details(),
             androidScheduleMode: AndroidScheduleMode.exact,
-          
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
           );
           debugPrint('✓ Daily notification scheduled successfully (using exact mode)');
           debugPrint('  Will fire at: $scheduledDate');
@@ -145,6 +199,8 @@ class NotificationsService {
             scheduledDate,
             _details(),
             androidScheduleMode: AndroidScheduleMode.exact,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
           );
           debugPrint('✓ Weekly notification scheduled successfully (using exact mode)');
           debugPrint('  Will fire at: $scheduledDate');
@@ -157,12 +213,17 @@ class NotificationsService {
             scheduledDate,
             _details(),
             androidScheduleMode: AndroidScheduleMode.exact,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
           );
           debugPrint('✓ Monthly notification scheduled successfully (using exact mode)');
           debugPrint('  Will fire at: $scheduledDate');
           break;
       }
       debugPrint('=== Scheduling Complete ===\n');
+      
+      // Get pending notifications for debugging
+      await getPendingNotifications();
     } catch (e, stackTrace) {
       debugPrint('✗ ERROR scheduling notification: $e');
       debugPrint('Stack trace: $stackTrace');
