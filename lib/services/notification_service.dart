@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:mysugaryapp/models/reminder_models.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -20,10 +19,7 @@ class NotificationsService {
   bool _isInitialized = false;
 
   Future<void> init() async {
-    if (_isInitialized) return;
-
-    // Request notification permissions
-    final notificationPermission = await _plugin
+    await _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >()
@@ -73,63 +69,12 @@ class NotificationsService {
 
     // Initialize timezone database for zoned scheduling
     tzdata.initializeTimeZones();
-    
-    // Get the device's timezone offset and set tz.local accordingly
-    final deviceOffset = DateTime.now().timeZoneOffset;
-    final offsetHours = deviceOffset.inHours;
-    final offsetMinutes = deviceOffset.inMinutes.remainder(60);
-    
-    // Try to find a timezone that matches the device offset
-    // Common timezone patterns based on offset
-    String timezoneName;
-    try {
-      // For whole hour offsets, try standard timezone names
-      if (offsetMinutes == 0) {
-        // Try common timezone names based on offset
-        if (offsetHours >= -12 && offsetHours <= 14) {
-          // Use Etc/GMT notation (note: signs are inverted in Etc/GMT)
-          // UTC+2 is Etc/GMT-2
-          timezoneName = offsetHours <= 0 
-              ? 'Etc/GMT+${offsetHours.abs()}'
-              : 'Etc/GMT-$offsetHours';
-          tz.setLocalLocation(tz.getLocation(timezoneName));
-          debugPrint('Timezone set to: $timezoneName (offset: ${deviceOffset})');
-        }
-      } else {
-        // For fractional offsets, fall back to UTC
-        tz.setLocalLocation(tz.getLocation('UTC'));
-        debugPrint('Timezone set to UTC (fractional offset detected: ${deviceOffset})');
-      }
-    } catch (e) {
-      // If timezone lookup fails, use UTC as fallback
-      tz.setLocalLocation(tz.getLocation('UTC'));
-      debugPrint('Timezone fallback to UTC (error: $e)');
-    }
-    
-    debugPrint('Final tz.local: ${tz.local.name}');
-    
-    _isInitialized = true;
-    debugPrint('NotificationsService initialized successfully');
   }
 
-  /// Schedule reminder using exact alarms to ensure notifications fire at the specified time.
+  /// Schedule reminder using inexact modes (battery-friendly) based on frequency.
   Future<void> scheduleReminder(ReminderItemDto reminder) async {
-    // Ensure the service is initialized
-    await init();
-    
-    debugPrint('=== Scheduling Reminder ===');
-    debugPrint('ID: ${reminder.id}');
-    debugPrint('Title: ${reminder.title}');
-    debugPrint('Time: ${reminder.time}');
-    debugPrint('Enabled: ${reminder.enabled}');
-    debugPrint('Frequency: ${reminder.frequency}');
-    
-    if (!reminder.enabled) {
-      debugPrint('Reminder is disabled, skipping schedule');
-      return;
-    }
+    if (!reminder.enabled) return;
 
-    // Validate time format
     final parts = reminder.time.split(':');
     if (parts.length != 2) {
       debugPrint('Invalid time format for reminder ${reminder.id}: ${reminder.time}');

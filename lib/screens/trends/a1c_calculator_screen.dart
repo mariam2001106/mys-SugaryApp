@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mysugaryapp/models/glucose_entry_model.dart';
 import 'package:mysugaryapp/services/glucose_service.dart';
 import 'package:mysugaryapp/services/profile_service.dart';
-import 'package:mysugaryapp/models/user_profile.dart';
 
 class A1CCalculatorScreen extends StatefulWidget {
   const A1CCalculatorScreen({super.key});
@@ -148,7 +147,7 @@ class _A1CCalculatorScreenState extends State<A1CCalculatorScreen> {
                               Text(
                                 '> 7.0%',
                                 style: TextStyle(
-                                  color: Colors.deepPurple,
+                                  color: Theme.of(context).colorScheme.primary,
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -191,7 +190,9 @@ class _A1CCalculatorScreenState extends State<A1CCalculatorScreen> {
                           const SizedBox(height: 10),
                           _refRow(
                             cs,
-                            color: const Color(0xFFD9F5E5),
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFF1B4332)  // Darker green for dark mode
+                                : const Color(0xFFD1F4E0),  // Slightly darker/more saturated green for light mode
                             dot: const Color(0xFF2BA24C),
                             title: 'a1c.ref_normal_title'.tr(),
                             desc: 'a1c.ref_normal_desc'.tr(),
@@ -199,7 +200,9 @@ class _A1CCalculatorScreenState extends State<A1CCalculatorScreen> {
                           const SizedBox(height: 8),
                           _refRow(
                             cs,
-                            color: const Color(0xFFFFF3D7),
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFF4A3800)  // Darker yellow for dark mode
+                                : const Color(0xFFFFEBAA),  // More saturated yellow for light mode
                             dot: const Color(0xFFF7B500),
                             title: 'a1c.ref_prediabetes_title'.tr(),
                             desc: 'a1c.ref_prediabetes_desc'.tr(),
@@ -207,7 +210,9 @@ class _A1CCalculatorScreenState extends State<A1CCalculatorScreen> {
                           const SizedBox(height: 8),
                           _refRow(
                             cs,
-                            color: const Color(0xFFFFE7DA),
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFF4A2A1A)  // Darker orange for dark mode
+                                : const Color(0xFFFFD4B3),  // More saturated orange for light mode
                             dot: const Color(0xFFEA580C),
                             title: 'a1c.ref_controlled_title'.tr(),
                             desc: 'a1c.ref_controlled_desc'.tr(),
@@ -215,7 +220,9 @@ class _A1CCalculatorScreenState extends State<A1CCalculatorScreen> {
                           const SizedBox(height: 8),
                           _refRow(
                             cs,
-                            color: const Color(0xFFFFE0E0),
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFF4A1A1A)  // Darker red for dark mode
+                                : const Color(0xFFFFCCCC),  // More saturated red for light mode
                             dot: const Color(0xFFD32F2F),
                             title: 'a1c.ref_uncontrolled_title'.tr(),
                             desc: 'a1c.ref_uncontrolled_desc'.tr(),

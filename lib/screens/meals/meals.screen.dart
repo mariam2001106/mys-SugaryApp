@@ -143,8 +143,8 @@ class _MealLogScreenState extends State<MealLogScreen> {
                       quantity: q,
                       unit: base.unit,
                     );
-                    setState(() => _selectedItems.add(item));
                     Navigator.pop(ctx);
+                    setState(() => _selectedItems.add(item));
                   },
                   child: Text('meals.add_button'.tr()),
                 ),
@@ -282,6 +282,7 @@ class _MealLogScreenState extends State<MealLogScreen> {
                           );
                           return;
                         }
+                        Navigator.pop(ctx);
                         setState(() {
                           _selectedItems.add(
                             FoodItem(
@@ -293,7 +294,6 @@ class _MealLogScreenState extends State<MealLogScreen> {
                             ),
                           );
                         });
-                        Navigator.pop(ctx);
                       },
                       child: Text('meals.add_button'.tr()),
                     ),
@@ -471,7 +471,7 @@ class _MealLogScreenState extends State<MealLogScreen> {
                     ),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<MealType>(
-                      value: _mealType,
+                      initialValue: _mealType,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -787,7 +787,7 @@ class _MealLogScreenState extends State<MealLogScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
+                                  color: cs.shadow.withOpacity(0.03),
                                   blurRadius: 6,
                                   offset: const Offset(0, 3),
                                 ),
@@ -873,9 +873,9 @@ class _MealLogScreenState extends State<MealLogScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.restaurant_outlined,
-                                color: Colors.grey,
+                                color: cs.onSurfaceVariant,
                               ),
                               const SizedBox(width: 6),
                               Expanded(
@@ -900,7 +900,7 @@ class _MealLogScreenState extends State<MealLogScreen> {
                             if (m.totalCalories != null)
                               '${m.totalCalories} ${'meals.calories_unit'.tr()}',
                             if (m.insulinUnitsSuggested != null)
-                              '${'meals.insulin_suggested'.tr(args: [m.insulinUnitsSuggested!.toStringAsFixed(2)])}',
+                              'meals.insulin_suggested'.tr(args: [m.insulinUnitsSuggested!.toStringAsFixed(2)]),
                           ].join(' • ');
                           return Container(
                             margin: const EdgeInsets.only(bottom: 10),

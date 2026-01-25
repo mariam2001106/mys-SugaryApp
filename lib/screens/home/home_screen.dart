@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' as fr;
 import 'package:easy_localization/easy_localization.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'dashboard.dart';
 import 'package:mysugaryapp/screens/profile/profile_screen.dart';
 import 'package:mysugaryapp/screens/glucose/glucose_screen.dart';

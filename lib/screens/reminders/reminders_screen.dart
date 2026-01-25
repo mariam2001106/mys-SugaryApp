@@ -86,13 +86,14 @@ class _RemindersScreenState extends State<RemindersScreen> {
   }
 
   Color _colorFor(ReminderType t) {
+    final cs = Theme.of(context).colorScheme;
     switch (t) {
       case ReminderType.medication:
-        return Colors.blue.shade600;
+        return cs.primary;
       case ReminderType.glucose:
-        return Colors.green.shade600;
+        return cs.secondary;
       case ReminderType.appointment:
-        return Colors.orange.shade700;
+        return cs.tertiary;
     }
   }
 

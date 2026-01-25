@@ -82,7 +82,7 @@ class _SmartAssistState extends State<SmartAssist> {
                   SizedBox(
                     width: 160,
                     child: DropdownButtonFormField<ReminderType>(
-                      value: item.type,
+                      initialValue: item.type,
                       decoration: InputDecoration(
                         labelText: 'reminders.type_label'.tr(),
                         filled: true,
@@ -226,7 +226,7 @@ class _SmartAssistState extends State<SmartAssist> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black.withValues(alpha: .55),
+      color: Theme.of(context).colorScheme.scrim.withValues(alpha: .7),
       child: Center(child: _addRemindersCard()),
     );
   }

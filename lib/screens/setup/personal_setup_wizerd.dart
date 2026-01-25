@@ -52,7 +52,6 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
   }
 
   static const int totalSteps = 7;
-  static const Color accent = Color(0xFF0D3B66); // adjust to your theme
 
   int get _progressNumerator => step + 1;
 
@@ -215,9 +214,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
       child: Builder(
         builder: (context) {
           final cs = Theme.of(context).colorScheme;
-          final bg = Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF0F141A)
-              : cs.surface;
+          final bg = cs.surface;
 
           return Scaffold(
             backgroundColor: bg,
@@ -236,7 +233,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                       child: LinearProgressIndicator(
                         value: _progressNumerator / totalSteps,
                         minHeight: 6,
-                        color: accent,
+                        color: cs.primary,
                         backgroundColor: cs.onSurface.withValues(alpha: 0.12),
                       ),
                     ),
@@ -256,8 +253,8 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
                               width: double.infinity,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: accent,
-                                  foregroundColor: Colors.white,
+                                  backgroundColor: cs.primary,
+                                  foregroundColor: cs.onPrimary,
                                   minimumSize: const Size.fromHeight(54),
                                   shape: const StadiumBorder(),
                                 ),
@@ -584,7 +581,7 @@ class _PersonalSetupWizardState extends State<PersonalSetupWizard> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? accent : cs.onSurface.withValues(alpha: 0.06),
+          color: selected ? cs.primary : cs.onSurface.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
             color: selected
