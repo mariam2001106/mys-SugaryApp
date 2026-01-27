@@ -118,7 +118,16 @@
         "cancel": "Cancel",
         "name": "Name",
         "email": "Email",
-        "language": "Language"
+        "language": "Language",
+        "carb_ratio_title": "Carb-to-Insulin Ratio",
+        "carb_ratio_description": "Enter how many grams of carbohydrates are covered by 1 unit of insulin. This will be used to calculate insulin suggestions for your meals.",
+        "carb_ratio_label": "Carb ratio",
+        "carb_ratio_example": "Example: 15 means 1 unit per 15g carbs",
+        "save_carb_ratio": "Save Ratio",
+        "carb_ratio_required": "Please enter your carb-to-insulin ratio",
+        "carb_ratio_invalid": "Please enter a valid number greater than 0",
+        "carb_ratio_saved": "Carb-to-insulin ratio saved successfully",
+        "carb_ratio_error": "Failed to save ratio. Please try again."
     },
     "smart": {
         "med_title": "Set up medication reminders?",
