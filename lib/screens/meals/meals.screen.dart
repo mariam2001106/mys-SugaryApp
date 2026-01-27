@@ -99,7 +99,7 @@ class _MealLogScreenState extends State<MealLogScreen> {
         ? null 
         : num.tryParse(_caloriesCtrl.text.trim());
 
-    final id = await _svc.addMeal(
+    final result = await _svc.addMeal(
       name: _mealNameCtrl.text.trim(),
       type: _mealType!,
       timestamp: tsLocal,
@@ -109,7 +109,7 @@ class _MealLogScreenState extends State<MealLogScreen> {
     );
 
     if (!mounted) return;
-    if (id == null) {
+    if (result == null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(
@@ -122,15 +122,67 @@ class _MealLogScreenState extends State<MealLogScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(
-      SnackBar(
-        content: Text('meals.save_success'.tr()),
-        backgroundColor: Colors.green,
+    // Show insulin suggestion dialog
+    final insulinUnits = result['insulinUnits'] as num?;
+    final totalCarbs = result['totalCarbs'] as num;
+    
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 28),
+            SizedBox(width: 8),
+            Text('meals.save_success'.tr()),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${_mealNameCtrl.text.trim()}',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 12),
+            Text(
+              '${totalCarbs.toStringAsFixed(0)}g ${'meals.carbs_label'.tr()}',
+              style: TextStyle(fontSize: 16),
+            ),
+            if (insulinUnits != null) ...[
+              SizedBox(height: 8),
+              Divider(),
+              SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.medication, color: Colors.blue, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${'meals.suggested_insulin'.tr()}: ${insulinUnits.toStringAsFixed(2)} units',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('OK', style: TextStyle(fontSize: 16)),
+          ),
+        ],
       ),
     );
-    // Reset fields after save
+
+    // Reset fields after dialog is closed
+    if (!mounted) return;
     setState(() {
       _mealNameCtrl.clear();
       _carbsCtrl.clear();

@@ -14,7 +14,8 @@ class MealService {
   /// Create a meal log and compute insulin suggestion if carbRatio exists.
   /// carbRatio is "grams per insulin unit". InsulinUnits = totalCarbs / carbRatio.
   /// If items list is empty, use direct carbs/calories values.
-  Future<String?> addMeal({
+  /// Returns a map with 'id' and 'insulinUnits' keys.
+  Future<Map<String, dynamic>?> addMeal({
     required String name,
     required MealType type,
     required DateTime timestamp,
@@ -63,7 +64,11 @@ class MealService {
     );
 
     await ref.set(entry.toMap());
-    return ref.id;
+    return {
+      'id': ref.id,
+      'insulinUnits': insulinUnits,
+      'totalCarbs': totalCarbs,
+    };
   }
 
   Future<void> updateMeal(MealEntry entry) async {
