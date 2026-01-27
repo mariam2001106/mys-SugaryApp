@@ -367,8 +367,10 @@ class _MealLogScreenState extends State<MealLogScreen> {
       _mealNameCtrl.clear();
       _noteCtrl.clear();
       _mealType = null;
-      _selectedDate = null;
-      _selectedTime = null;
+      // Reinitialize date and time to current values for next meal
+      final now = DateTime.now();
+      _selectedDate = now;
+      _selectedTime = TimeOfDay.fromDateTime(now);
     });
   }
 
