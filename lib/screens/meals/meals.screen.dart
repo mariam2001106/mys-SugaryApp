@@ -324,13 +324,22 @@ class _MealLogScreenState extends State<MealLogScreen> {
   Future<void> _saveMeal() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_mealType == null ||
-        _selectedDate == null ||
-        _selectedTime == null ||
-        _selectedItems.isEmpty) {
+    // Build detailed error message for missing fields
+    final missingFields = <String>[];
+    if (_mealType == null) missingFields.add('Meal type');
+    if (_selectedDate == null) missingFields.add('Date');
+    if (_selectedTime == null) missingFields.add('Time');
+    if (_selectedItems.isEmpty) missingFields.add('Food items (add at least one)');
+
+    if (missingFields.isNotEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('meals.missing_fields'.tr())));
+      ).showSnackBar(
+        SnackBar(
+          content: Text('Missing: ${missingFields.join(', ')}'),
+          duration: const Duration(seconds: 4),
+        ),
+      );
       return;
     }
 
@@ -354,13 +363,24 @@ class _MealLogScreenState extends State<MealLogScreen> {
     if (id == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('meals.save_error'.tr())));
+      ).showSnackBar(
+        SnackBar(
+          content: Text('Could not save meal. Please check your connection and try again.'),
+          duration: const Duration(seconds: 4),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text('meals.save_success'.tr())));
+    ).showSnackBar(
+      SnackBar(
+        content: Text('meals.save_success'.tr()),
+        backgroundColor: Colors.green,
+      ),
+    );
     // Reset minimal fields after save
     setState(() {
       _selectedItems.clear();
