@@ -433,6 +433,16 @@ class _MealLogScreenState extends State<MealLogScreen> {
                           vertical: 12,
                         ),
                       ),
+                      validator: (v) {
+                        // Calories is optional, but if provided must be valid
+                        if (v != null && v.trim().isNotEmpty) {
+                          final n = num.tryParse(v.trim());
+                          if (n == null || n < 0) {
+                            return 'meals.invalid_number'.tr();
+                          }
+                        }
+                        return null;
+                      },
                     ),
 
                     const SizedBox(height: 12),
