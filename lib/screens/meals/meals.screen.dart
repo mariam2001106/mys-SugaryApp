@@ -28,6 +28,15 @@ class _MealLogScreenState extends State<MealLogScreen> {
   final List<FoodItem> _selectedItems = [];
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize date and time to current values
+    final now = DateTime.now();
+    _selectedDate = now;
+    _selectedTime = TimeOfDay.fromDateTime(now);
+  }
+
+  @override
   void dispose() {
     _mealNameCtrl.dispose();
     _noteCtrl.dispose();
