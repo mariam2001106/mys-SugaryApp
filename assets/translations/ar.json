@@ -286,6 +286,8 @@
         "missing_fields": "يرجى إكمال الحقول المطلوبة",
         "missing_field_prefix": "مفقود",
         "food_items_required": "عناصر الطعام (أضف واحدًا على الأقل)",
+        "carbs_required": "الكربوهيدرات مطلوبة",
+        "invalid_number": "أدخل رقمًا صحيحًا",
         "common_foods_title": "أطعمة شائعة",
         "common_foods_empty": "لا توجد أطعمة شائعة بعد",
         "add_button": "إضافة",

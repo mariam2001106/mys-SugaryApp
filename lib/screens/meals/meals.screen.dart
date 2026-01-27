@@ -402,11 +402,11 @@ class _MealLogScreenState extends State<MealLogScreen> {
                       ),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
-                          return 'Carbohydrates required';
+                          return 'meals.carbs_required'.tr();
                         }
                         final n = num.tryParse(v.trim());
                         if (n == null || n < 0) {
-                          return 'Enter valid number';
+                          return 'meals.invalid_number'.tr();
                         }
                         return null;
                       },

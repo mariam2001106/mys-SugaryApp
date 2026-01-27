@@ -291,6 +291,8 @@
     "missing_fields": "Please complete all required fields",
     "missing_field_prefix": "Missing",
     "food_items_required": "Food items (add at least one)",
+    "carbs_required": "Carbohydrates required",
+    "invalid_number": "Enter valid number",
     "common_foods_title": "Common Foods",
     "common_foods_empty": "No common foods yet",
     "add_button": "Add",
