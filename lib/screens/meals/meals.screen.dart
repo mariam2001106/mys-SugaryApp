@@ -28,6 +28,15 @@ class _MealLogScreenState extends State<MealLogScreen> {
   final List<FoodItem> _selectedItems = [];
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize date and time to current values
+    final now = DateTime.now();
+    _selectedDate = now;
+    _selectedTime = TimeOfDay.fromDateTime(now);
+  }
+
+  @override
   void dispose() {
     _mealNameCtrl.dispose();
     _noteCtrl.dispose();
@@ -315,13 +324,22 @@ class _MealLogScreenState extends State<MealLogScreen> {
   Future<void> _saveMeal() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_mealType == null ||
-        _selectedDate == null ||
-        _selectedTime == null ||
-        _selectedItems.isEmpty) {
+    // Build detailed error message for missing fields
+    final missingFields = <String>[];
+    if (_mealType == null) missingFields.add('meals.meal_type_label'.tr());
+    if (_selectedDate == null) missingFields.add('meals.date_label'.tr());
+    if (_selectedTime == null) missingFields.add('meals.time_label'.tr());
+    if (_selectedItems.isEmpty) missingFields.add('meals.food_items_required'.tr());
+
+    if (missingFields.isNotEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('meals.missing_fields'.tr())));
+      ).showSnackBar(
+        SnackBar(
+          content: Text('${'meals.missing_field_prefix'.tr()}: ${missingFields.join(', ')}'),
+          duration: const Duration(seconds: 4),
+        ),
+      );
       return;
     }
 
@@ -345,21 +363,34 @@ class _MealLogScreenState extends State<MealLogScreen> {
     if (id == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('meals.save_error'.tr())));
+      ).showSnackBar(
+        SnackBar(
+          content: Text('meals.save_error'.tr()),
+          duration: const Duration(seconds: 4),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text('meals.save_success'.tr())));
+    ).showSnackBar(
+      SnackBar(
+        content: Text('meals.save_success'.tr()),
+        backgroundColor: Colors.green,
+      ),
+    );
     // Reset minimal fields after save
     setState(() {
       _selectedItems.clear();
       _mealNameCtrl.clear();
       _noteCtrl.clear();
       _mealType = null;
-      _selectedDate = null;
-      _selectedTime = null;
+      // Reinitialize date and time to current values for next meal
+      final now = DateTime.now();
+      _selectedDate = now;
+      _selectedTime = TimeOfDay.fromDateTime(now);
     });
   }
 
