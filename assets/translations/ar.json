@@ -282,7 +282,7 @@
         "notes_hint": "أي ملاحظات عن الوجبة...",
         "save_button": "حفظ الوجبة",
         "save_success": "تم حفظ الوجبة",
-        "save_error": "تعذر حفظ الوجبة",
+        "save_error": "تعذر حفظ الوجبة. يرجى التحقق من الاتصال.",
         "missing_fields": "يرجى إكمال الحقول المطلوبة",
         "common_foods_title": "أطعمة شائعة",
         "common_foods_empty": "لا توجد أطعمة شائعة بعد",

@@ -365,7 +365,7 @@ class _MealLogScreenState extends State<MealLogScreen> {
         context,
       ).showSnackBar(
         SnackBar(
-          content: Text('Could not save meal. Please check your connection and try again.'),
+          content: Text('meals.save_error'.tr()),
           duration: const Duration(seconds: 4),
           backgroundColor: Colors.red,
         ),
