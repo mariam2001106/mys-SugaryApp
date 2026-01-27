@@ -326,17 +326,17 @@ class _MealLogScreenState extends State<MealLogScreen> {
 
     // Build detailed error message for missing fields
     final missingFields = <String>[];
-    if (_mealType == null) missingFields.add('Meal type');
-    if (_selectedDate == null) missingFields.add('Date');
-    if (_selectedTime == null) missingFields.add('Time');
-    if (_selectedItems.isEmpty) missingFields.add('Food items (add at least one)');
+    if (_mealType == null) missingFields.add('meals.meal_type_label'.tr());
+    if (_selectedDate == null) missingFields.add('meals.date_label'.tr());
+    if (_selectedTime == null) missingFields.add('meals.time_label'.tr());
+    if (_selectedItems.isEmpty) missingFields.add('meals.food_items_required'.tr());
 
     if (missingFields.isNotEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(
         SnackBar(
-          content: Text('Missing: ${missingFields.join(', ')}'),
+          content: Text('${'meals.missing_field_prefix'.tr()}: ${missingFields.join(', ')}'),
           duration: const Duration(seconds: 4),
         ),
       );

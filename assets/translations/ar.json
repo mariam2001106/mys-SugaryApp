@@ -284,6 +284,8 @@
         "save_success": "تم حفظ الوجبة",
         "save_error": "تعذر حفظ الوجبة. يرجى التحقق من الاتصال.",
         "missing_fields": "يرجى إكمال الحقول المطلوبة",
+        "missing_field_prefix": "مفقود",
+        "food_items_required": "عناصر الطعام (أضف واحدًا على الأقل)",
         "common_foods_title": "أطعمة شائعة",
         "common_foods_empty": "لا توجد أطعمة شائعة بعد",
         "add_button": "إضافة",
