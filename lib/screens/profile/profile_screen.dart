@@ -1,14 +1,119 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:mysugaryapp/services/profile_service.dart';
 import 'package:flutter/rendering.dart' as fr;
 
 
-class ProfileScreen extends StatelessWidget {
-  
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final _carbRatioController = TextEditingController();
+  bool _isLoadingCarbRatio = true;
+  bool _isSavingCarbRatio = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCarbRatio();
+  }
+
+  @override
+  void dispose() {
+    _carbRatioController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadCarbRatio() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      final data = await ProfileService().getUserDataFromServer(user.uid);
+      if (data != null && mounted) {
+        final carbRatio = data['carbRatio'];
+        if (carbRatio != null) {
+          _carbRatioController.text = carbRatio.toString();
+        }
+      }
+    } catch (e) {
+      // Ignore errors silently
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingCarbRatio = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _saveCarbRatio() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final text = _carbRatioController.text.trim();
+    if (text.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('profile.carb_ratio_required'.tr()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    final value = double.tryParse(text);
+    if (value == null || value <= 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('profile.carb_ratio_invalid'.tr()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _isSavingCarbRatio = true;
+    });
+
+    try {
+      await ProfileService().updatePartial(user.uid, {'carbRatio': value});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('profile.carb_ratio_saved'.tr()),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('profile.carb_ratio_error'.tr()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSavingCarbRatio = false;
+        });
+      }
+    }
+  }
 
   Future<void> _showSignOutDialog(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -189,6 +294,85 @@ class ProfileScreen extends StatelessWidget {
                             child: const Text('English'),
                           ),
                         ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.medical_information, color: cs.primary),
+                          const SizedBox(width: 12),
+                          Text(
+                            'profile.carb_ratio_title'.tr(),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                              color: cs.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'profile.carb_ratio_description'.tr(),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: cs.onSurface.withValues(alpha: .7),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _isLoadingCarbRatio
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
+                          : TextField(
+                              controller: _carbRatioController,
+                              keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d*\.?\d*'),
+                                ),
+                              ],
+                              decoration: InputDecoration(
+                                labelText: 'profile.carb_ratio_label'.tr(),
+                                hintText: '15',
+                                helperText: 'profile.carb_ratio_example'.tr(),
+                                prefixIcon: Icon(Icons.food_bank, color: cs.primary),
+                                suffixText: 'g',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: _isSavingCarbRatio ? null : _saveCarbRatio,
+                        icon: _isSavingCarbRatio
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.save),
+                        label: Text('profile.save_carb_ratio'.tr()),
                       ),
                     ],
                   ),
