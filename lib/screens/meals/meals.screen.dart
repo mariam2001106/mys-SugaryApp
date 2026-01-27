@@ -18,14 +18,13 @@ class _MealLogScreenState extends State<MealLogScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _mealNameCtrl = TextEditingController();
+  final _carbsCtrl = TextEditingController();
+  final _caloriesCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
 
   MealType? _mealType;
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
-
-  // Items selected for this meal
-  final List<FoodItem> _selectedItems = [];
 
   @override
   void initState() {
@@ -39,21 +38,10 @@ class _MealLogScreenState extends State<MealLogScreen> {
   @override
   void dispose() {
     _mealNameCtrl.dispose();
+    _carbsCtrl.dispose();
+    _caloriesCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
-  }
-
-  // Derived totals from selected items
-  ({num carbs, num? calories}) get _totals {
-    num carbs = 0;
-    num? calories;
-    for (final i in _selectedItems) {
-      carbs += i.carbsGrams;
-      if (i.calories != null) {
-        calories = (calories ?? 0) + i.calories!;
-      }
-    }
-    return (carbs: carbs, calories: calories);
   }
 
   Future<void> _pickTime() async {
@@ -75,97 +63,6 @@ class _MealLogScreenState extends State<MealLogScreen> {
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
-  void _removeItem(int index) {
-    setState(() => _selectedItems.removeAt(index));
-  }
-
-  Future<void> _addCommonFood(FoodItem base) async {
-    final qtyCtrl = TextEditingController(text: '1');
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) {
-        final cs = Theme.of(ctx).colorScheme;
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'meals.add_item_title'.tr(),
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      base.name,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 100,
-                    child: TextFormField(
-                      controller: qtyCtrl,
-                      keyboardType: TextInputType.number,
-                      textInputAction: TextInputAction.done,
-                      decoration: InputDecoration(
-                        labelText: 'meals.quantity_label'.tr(),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 10,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () {
-                    final q = num.tryParse(qtyCtrl.text.trim());
-                    if (q == null || q <= 0) {
-                      ScaffoldMessenger.of(ctx).showSnackBar(
-                        SnackBar(content: Text('meals.quantity_invalid'.tr())),
-                      );
-                      return;
-                    }
-                    // Multiply macros/calories by quantity
-                    final item = FoodItem(
-                      name: base.name,
-                      carbsGrams: base.carbsGrams * q,
-                      calories: base.calories == null
-                          ? null
-                          : base.calories! * q,
-                      quantity: q,
-                      unit: base.unit,
-                    );
-                    Navigator.pop(ctx);
-                    setState(() => _selectedItems.add(item));
-                  },
-                  child: Text('meals.add_button'.tr()),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-    qtyCtrl.dispose();
-  }
-
   Future<void> _saveMeal() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -174,7 +71,7 @@ class _MealLogScreenState extends State<MealLogScreen> {
     if (_mealType == null) missingFields.add('meals.meal_type_label'.tr());
     if (_selectedDate == null) missingFields.add('meals.date_label'.tr());
     if (_selectedTime == null) missingFields.add('meals.time_label'.tr());
-    if (_selectedItems.isEmpty) missingFields.add('meals.food_items_required'.tr());
+    // Carbs input is validated by form validator, not needed here
 
     if (missingFields.isNotEmpty) {
       ScaffoldMessenger.of(
@@ -196,11 +93,18 @@ class _MealLogScreenState extends State<MealLogScreen> {
       _selectedTime!.minute,
     );
 
+    // Parse carbs and calories
+    final carbs = num.tryParse(_carbsCtrl.text.trim()) ?? 0;
+    final calories = _caloriesCtrl.text.trim().isEmpty 
+        ? null 
+        : num.tryParse(_caloriesCtrl.text.trim());
+
     final id = await _svc.addMeal(
       name: _mealNameCtrl.text.trim(),
       type: _mealType!,
       timestamp: tsLocal,
-      items: _selectedItems,
+      directCarbs: carbs,
+      directCalories: calories,
       note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
     );
 
@@ -226,10 +130,11 @@ class _MealLogScreenState extends State<MealLogScreen> {
         backgroundColor: Colors.green,
       ),
     );
-    // Reset minimal fields after save
+    // Reset fields after save
     setState(() {
-      _selectedItems.clear();
       _mealNameCtrl.clear();
+      _carbsCtrl.clear();
+      _caloriesCtrl.clear();
       _noteCtrl.clear();
       _mealType = null;
       // Reinitialize date and time to current values for next meal
@@ -242,7 +147,6 @@ class _MealLogScreenState extends State<MealLogScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final totals = _totals;
     final timeFmt = DateFormat('h:mm a');
     final dateFmt = DateFormat('MM/dd/yyyy');
 
@@ -476,46 +380,18 @@ class _MealLogScreenState extends State<MealLogScreen> {
 
                     const SizedBox(height: 12),
 
-                    // Selected items list
-                    if (_selectedItems.isNotEmpty) ...[
-                      Text(
-                        'meals.selected_items_title'.tr(),
-                        style: TextStyle(color: cs.onSurface.withOpacity(0.75)),
-                      ),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _selectedItems.asMap().entries.map((e) {
-                          final i = e.key;
-                          final item = e.value;
-                          final chipsText =
-                              '${item.name} • ${item.carbsGrams.toString()} g'
-                              '${item.calories == null ? '' : ' • ${item.calories!.toString()} kcal'}'
-                              '${item.quantity > 0 ? ' • x${item.quantity}' : ''}';
-                          return Chip(
-                            label: Text(chipsText),
-                            deleteIcon: const Icon(Icons.close, size: 16),
-                            onDeleted: () => _removeItem(i),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-
-                    // Read-only totals
+                    // Carbohydrates input
                     Text(
                       'meals.carbs_total_label'.tr(),
                       style: TextStyle(color: cs.onSurface.withOpacity(0.75)),
                     ),
                     const SizedBox(height: 6),
                     TextFormField(
-                      readOnly: false,
-                      controller: TextEditingController(
-                        text: totals.carbs.toStringAsFixed(0),
-                      ),
+                      controller: _carbsCtrl,
+                      keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         hintText: 'meals.carbs_total_hint'.tr(),
+                        suffixText: 'g',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -524,22 +400,31 @@ class _MealLogScreenState extends State<MealLogScreen> {
                           vertical: 12,
                         ),
                       ),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Carbohydrates required';
+                        }
+                        final n = num.tryParse(v.trim());
+                        if (n == null || n < 0) {
+                          return 'Enter valid number';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 10),
+                    
+                    // Calories input
                     Text(
                       'meals.calories_total_label'.tr(),
                       style: TextStyle(color: cs.onSurface.withOpacity(0.75)),
                     ),
                     const SizedBox(height: 6),
                     TextFormField(
-                      readOnly: false,
-                      controller: TextEditingController(
-                        text: totals.calories == null
-                            ? ''
-                            : totals.calories!.toStringAsFixed(0),
-                      ),
+                      controller: _caloriesCtrl,
+                      keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         hintText: 'meals.calories_total_hint'.tr(),
+                        suffixText: 'kcal',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -590,117 +475,6 @@ class _MealLogScreenState extends State<MealLogScreen> {
                     ),
                   ],
                 ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Common foods
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: cs.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: cs.onSurface.withOpacity(0.1)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.list_alt_outlined, size: 20),
-                      const SizedBox(width: 6),
-                      Text(
-                        'meals.common_foods_title'.tr(),
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  StreamBuilder<List<FoodItem>>(
-                    stream: _svc.commonFoodsStream(),
-                    builder: (context, snap) {
-                      if (snap.connectionState == ConnectionState.waiting) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      }
-                      final foods = snap.data ?? [];
-                      if (foods.isEmpty) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            'meals.common_foods_empty'.tr(),
-                            style: TextStyle(
-                              color: cs.onSurface.withOpacity(0.7),
-                            ),
-                          ),
-                        );
-                      }
-                      return Column(
-                        children: foods.map((f) {
-                          final subtitle = [
-                            '${f.carbsGrams} g ${'meals.carbs_unit'.tr()}',
-                            if (f.calories != null)
-                              '${f.calories} ${'meals.calories_unit'.tr()}',
-                            if (f.unit?.isNotEmpty == true) f.unit!,
-                          ].join(' • ');
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: cs.surface,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: cs.onSurface.withOpacity(0.08),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        f.name,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        subtitle,
-                                        style: TextStyle(
-                                          color: cs.onSurface.withOpacity(0.7),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                OutlinedButton.icon(
-                                  onPressed: () => _addCommonFood(f),
-                                  icon: const Icon(Icons.add, size: 18),
-                                  label: Text('meals.add_button'.tr()),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      );
-                    },
-                  ),
-                ],
               ),
             ),
 

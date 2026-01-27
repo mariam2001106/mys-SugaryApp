@@ -13,22 +13,38 @@ class MealService {
 
   /// Create a meal log and compute insulin suggestion if carbRatio exists.
   /// carbRatio is "grams per insulin unit". InsulinUnits = totalCarbs / carbRatio.
+  /// If items list is empty, use direct carbs/calories values.
   Future<String?> addMeal({
     required String name,
     required MealType type,
     required DateTime timestamp,
-    required List<FoodItem> items,
+    List<FoodItem>? items,
+    num? directCarbs,
+    num? directCalories,
     String? note,
   }) async {
     final uid = _uid;
     if (uid == null) return null;
 
-    final totals = MealEntry.deriveTotals(items);
+    // Use direct values if provided, otherwise derive from items
+    final itemsList = items ?? [];
+    num totalCarbs;
+    num? totalCalories;
+    
+    if (directCarbs != null) {
+      totalCarbs = directCarbs;
+      totalCalories = directCalories;
+    } else {
+      final totals = MealEntry.deriveTotals(itemsList);
+      totalCarbs = totals.carbs;
+      totalCalories = totals.calories;
+    }
+
     final carbRatio = await _fetchCarbRatio(uid); // dynamic; no fallback default
 
     num? insulinUnits;
-    if (carbRatio != null && carbRatio > 0) {
-      insulinUnits = totals.carbs / carbRatio;
+    if (carbRatio != null && carbRatio > 0 && totalCarbs > 0) {
+      insulinUnits = totalCarbs / carbRatio;
     }
 
     final ref = _db.collection('users').doc(uid).collection('meals').doc('logs').collection('list').doc();
@@ -37,9 +53,9 @@ class MealService {
       name: name,
       type: type,
       timestamp: timestamp,
-      items: items,
-      totalCarbs: totals.carbs,
-      totalCalories: totals.calories,
+      items: itemsList,
+      totalCarbs: totalCarbs,
+      totalCalories: totalCalories,
       insulinUnitsSuggested: insulinUnits,
       note: note,
       createdAt: DateTime.now(),
