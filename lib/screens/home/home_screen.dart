@@ -42,35 +42,32 @@ class _HomeScreenState extends State<HomeScreen> {
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: _onTab,
-          type: BottomNavigationBarType.shifting,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: cs.surfaceContainer,
           selectedItemColor: cs.primary,
-          unselectedItemColor: cs.onSurface.withValues(alpha: 0.6),
-          showUnselectedLabels: false,
+          unselectedItemColor: cs.onSurfaceVariant.withValues(alpha: 0.6),
+          selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          unselectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
           items: [
             BottomNavigationBarItem(
               icon: const Icon(Icons.home_outlined),
               label: 'home.nav_home'.tr(),
-              backgroundColor: cs.surface,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.bloodtype_outlined),
               label: 'home.nav_glucose'.tr(),
-              backgroundColor: cs.surface,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.restaurant_outlined),
               label: 'home.nav_meals'.tr(),
-              backgroundColor: cs.surface,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.timeline_outlined),
               label: 'home.nav_trends'.tr(),
-              backgroundColor: cs.surface,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.person_outline),
               label: 'home.nav_profile'.tr(),
-              backgroundColor: cs.surface,
             ),
           ],
         ),

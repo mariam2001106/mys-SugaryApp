@@ -83,9 +83,9 @@ class A1CCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cs.surface,
+        color: cs.surfaceContainer,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.1)),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.3)),
       ),
       child: child,
     );
