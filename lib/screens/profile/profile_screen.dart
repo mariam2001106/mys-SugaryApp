@@ -186,9 +186,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
         updates['height'] = height;
       }
 
-      // Add emergency contact if provided
+      // Validate and add emergency contact if provided
       final emergencyContact = _emergencyContactController.text.trim();
       if (emergencyContact.isNotEmpty) {
+        // Validate: must start with "09" and be exactly 10 digits
+        if (!RegExp(r'^09\d{8}$').hasMatch(emergencyContact)) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('setup.emergency_contact_error'.tr()),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+          setState(() {
+            _isSaving = false;
+          });
+          return;
+        }
         updates['emergencyContact'] = emergencyContact;
       }
 
