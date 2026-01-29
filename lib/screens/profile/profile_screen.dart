@@ -93,7 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('profile.carb_ratio_saved'.tr()),
-            backgroundColor: Theme.of(context).colorScheme.tertiary,
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
       }

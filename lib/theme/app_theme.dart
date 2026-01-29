@@ -103,21 +103,54 @@ class AppTheme {
       filledButtonTheme: _filledButtonTheme(cs),
       outlinedButtonTheme: _outlinedButtonTheme(cs),
       cardTheme: CardThemeData(
-        elevation: 8,
-        surfaceTintColor: cs.surface,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
         color: cs.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: cs.outline.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
       ),
-      dividerTheme: DividerThemeData(color: cs.outline, thickness: 1),
+      chipTheme: ChipThemeData(
+        backgroundColor: cs.surfaceContainerHighest,
+        selectedColor: cs.primaryContainer,
+        disabledColor: cs.surfaceContainerLow,
+        labelStyle: TextStyle(color: cs.onSurface),
+        secondaryLabelStyle: TextStyle(color: cs.onSurfaceVariant),
+        side: BorderSide(color: cs.outline, width: 1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: cs.surface,
+        selectedItemColor: cs.primary,
+        unselectedItemColor: cs.onSurfaceVariant.withValues(alpha: 0.6),
+        selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+      ),
+      iconTheme: IconThemeData(color: cs.onSurface),
+      dividerTheme: DividerThemeData(
+        color: cs.outline.withValues(alpha: 0.3),
+        thickness: 1,
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: cs.inverseSurface,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        textStyle: TextStyle(color: cs.onInverseSurface, fontSize: 12),
+      ),
     );
   }
 
   static ThemeData dark() {
     // Material 3 compliant dark ColorScheme with accessibility focus
-    // Background hierarchy: background < surface < surfaceContainer < surfaceContainerHighest
+    // Background hierarchy: surface < surfaceContainer < surfaceContainerHighest
     final cs = ColorScheme.dark(
-      // Near-black background for deep contrast
-      background: const Color(0xFF0D0F12),
       // Slightly lighter surface for cards and containers
       surface: const Color(0xFF101317),
       surfaceContainerLowest: const Color(0xFF0D0F12),
@@ -174,7 +207,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: cs,
-      scaffoldBackgroundColor: cs.background,
+      scaffoldBackgroundColor: cs.surfaceContainerLowest,
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         foregroundColor: cs.onSurface,

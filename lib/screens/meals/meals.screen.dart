@@ -133,12 +133,12 @@ class _MealLogScreenState extends State<MealLogScreen> {
         return AlertDialog(
           title: Row(
             children: [
-              Icon(Icons.check_circle, color: dialogCs.tertiary, size: 28),
+              Icon(Icons.check_circle, color: dialogCs.primary, size: 28),
               SizedBox(width: 8),
               Text('meals.save_success'.tr()),
             ],
           ),
-        content: Column(
+          content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
