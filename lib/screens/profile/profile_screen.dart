@@ -121,34 +121,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final updates = <String, dynamic>{
         'displayName': _fullNameController.text.trim(),
-        'email': _emailController.text.trim(),
       };
 
-      // Add age if provided
+      // Validate and add age if provided
       final ageText = _ageController.text.trim();
       if (ageText.isNotEmpty) {
         final age = int.tryParse(ageText);
-        if (age != null) {
-          updates['age'] = age;
+        if (age == null || age < 1 || age > 120) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('setup.age_error'.tr()),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+          setState(() {
+            _isSaving = false;
+          });
+          return;
         }
+        updates['age'] = age;
       }
 
-      // Add weight if provided
+      // Validate and add weight if provided
       final weightText = _weightController.text.trim();
       if (weightText.isNotEmpty) {
         final weight = double.tryParse(weightText);
-        if (weight != null) {
-          updates['weight'] = weight;
+        if (weight == null || weight < 20 || weight > 500) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Weight must be between 20 and 500 kg'),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+          setState(() {
+            _isSaving = false;
+          });
+          return;
         }
+        updates['weight'] = weight;
       }
 
-      // Add height if provided
+      // Validate and add height if provided
       final heightText = _heightController.text.trim();
       if (heightText.isNotEmpty) {
         final height = double.tryParse(heightText);
-        if (height != null) {
-          updates['height'] = height;
+        if (height == null || height < 50 || height > 300) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Height must be between 50 and 300 cm'),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+          setState(() {
+            _isSaving = false;
+          });
+          return;
         }
+        updates['height'] = height;
       }
 
       // Add emergency contact if provided
@@ -168,20 +203,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
         updates['medicationName'] = medication;
       }
 
-      // Add glucose ranges if provided
+      // Validate and add glucose ranges if provided
       final minText = _targetGlucoseMinController.text.trim();
       final maxText = _targetGlucoseMaxController.text.trim();
       if (minText.isNotEmpty && maxText.isNotEmpty) {
         final min = int.tryParse(minText);
         final max = int.tryParse(maxText);
-        if (min != null && max != null) {
-          updates['glucoseRanges'] = {
-            'targetMin': min,
-            'targetMax': max,
-            'veryHigh': 250,
-            'veryLow': 60,
-          };
+        if (min == null || max == null || min < 50 || max > 400) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Glucose values must be between 50 and 400 mg/dL'),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+          setState(() {
+            _isSaving = false;
+          });
+          return;
         }
+        if (min >= max) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('setup.range_error'.tr()),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+          setState(() {
+            _isSaving = false;
+          });
+          return;
+        }
+        updates['glucoseRanges'] = {
+          'targetMin': min,
+          'targetMax': max,
+          'veryHigh': 250,
+          'veryLow': 60,
+        };
       }
 
       // Add carb ratio if provided
@@ -278,13 +339,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String label,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
-    bool enabled = true,
+    bool readOnly = false,
   }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
-      enabled: enabled && _isEditing,
+      enabled: !readOnly && _isEditing,
+      readOnly: readOnly,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(
@@ -298,7 +360,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String label,
     required DiabetesType? value,
     required void Function(DiabetesType?) onChanged,
-    bool enabled = true,
   }) {
     return DropdownButtonFormField<DiabetesType>(
       value: value,
@@ -307,6 +368,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
+      ),
+      items: [
+        DropdownMenuItem(value: DiabetesType.type1, child: Text('setup.type1'.tr())),
+        DropdownMenuItem(value: DiabetesType.type2, child: Text('setup.type2'.tr())),
+        DropdownMenuItem(value: DiabetesType.lada, child: Text('setup.lada'.tr())),
+        DropdownMenuItem(value: DiabetesType.type3, child: Text('setup.type3'.tr())),
+        DropdownMenuItem(value: DiabetesType.other, child: Text('setup.other'.tr())),
+      ],
+      onChanged: _isEditing ? onChanged : null,
+    );
+  }
       ),
       items: [
         DropdownMenuItem(value: DiabetesType.type1, child: Text('setup.type1'.tr())),
@@ -404,11 +476,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               const SizedBox(height: 12),
                               
-                              // Email
+                              // Email (read-only, displayed from Firebase Auth)
                               _buildTextField(
                                 controller: _emailController,
                                 label: 'profile.email'.tr(),
                                 keyboardType: TextInputType.emailAddress,
+                                readOnly: true,
                               ),
                               const SizedBox(height: 12),
                               
