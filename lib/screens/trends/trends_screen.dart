@@ -135,9 +135,11 @@ class _TrendScreenState extends State<TrendScreen> {
         child: Card(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: Theme.of(context).colorScheme.outline),
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+            ),
           ),
-          elevation: 1,
+          elevation: 0,
           child: FirestoreTrendChart(
             selectedHours: _selectedHours,
             veryLow: g.veryLow,
@@ -154,8 +156,11 @@ class _TrendScreenState extends State<TrendScreen> {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Theme.of(context).colorScheme.outline),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+        ),
       ),
+      elevation: 0,
       child: SizedBox(
         height: 240,
         child: Center(
@@ -173,9 +178,11 @@ class _TrendScreenState extends State<TrendScreen> {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Theme.of(context).colorScheme.outline),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+        ),
       ),
-      elevation: 1,
+      elevation: 0,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
         child: lr == null

@@ -131,7 +131,6 @@ class _DashboardState extends State<Dashboard> {
     required String label,
     required VoidCallback onTap,
   }) {
-    final cs = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
@@ -436,7 +435,7 @@ class _DashboardState extends State<Dashboard> {
                               width: 60,
                               height: 60,
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: cs.surface,
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
@@ -741,13 +740,11 @@ class _DashboardState extends State<Dashboard> {
                                     return Container(
                                       padding: const EdgeInsets.all(14),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.5,
-                                        ),
+                                        color: cs.surfaceContainer,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: cs.onSurface.withValues(
-                                            alpha: 0.1,
+                                          color: cs.outline.withValues(
+                                            alpha: 0.3,
                                           ),
                                           width: 1,
                                         ),
@@ -839,20 +836,20 @@ class _DashboardState extends State<Dashboard> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.green.shade50,
-                                  Colors.green.shade100.withValues(alpha: 0.3),
+                                  cs.tertiary.withValues(alpha: 0.05),
+                                  cs.tertiary.withValues(alpha: 0.02),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: Colors.green.shade300,
+                                color: cs.outline.withValues(alpha: 0.3),
                                 width: 1.5,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.green.withValues(alpha: 0.1),
+                                  color: cs.tertiary.withValues(alpha: 0.1),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
@@ -865,7 +862,7 @@ class _DashboardState extends State<Dashboard> {
                                   children: [
                                     Icon(
                                       Icons.lunch_dining,
-                                      color: Colors.green.shade700,
+                                      color: cs.tertiary,
                                       size: 24,
                                     ),
                                     const SizedBox(width: 12),
@@ -886,7 +883,7 @@ class _DashboardState extends State<Dashboard> {
                                   itemCount: meals.length,
                                   separatorBuilder: (_, __) => Divider(
                                     height: 20,
-                                    color: Colors.green.shade200,
+                                    color: cs.outline.withValues(alpha: 0.3),
                                   ),
                                   itemBuilder: (context, index) {
                                     final meal = meals[index];
@@ -907,12 +904,10 @@ class _DashboardState extends State<Dashboard> {
                                     return Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.7,
-                                        ),
+                                        color: cs.surfaceContainer,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: Colors.green.shade200,
+                                          color: cs.outline.withValues(alpha: 0.3),
                                           width: 1,
                                         ),
                                       ),
@@ -939,7 +934,7 @@ class _DashboardState extends State<Dashboard> {
                                                       vertical: 4,
                                                     ),
                                                 decoration: BoxDecoration(
-                                                  color: Colors.green.shade100,
+                                                  color: cs.tertiary.withValues(alpha: 0.15),
                                                   borderRadius:
                                                       BorderRadius.circular(8),
                                                 ),
@@ -948,8 +943,7 @@ class _DashboardState extends State<Dashboard> {
                                                   style: TextStyle(
                                                     fontSize: 11,
                                                     fontWeight: FontWeight.w600,
-                                                    color:
-                                                        Colors.green.shade800,
+                                                    color: cs.tertiary,
                                                   ),
                                                 ),
                                               ),
@@ -976,7 +970,7 @@ class _DashboardState extends State<Dashboard> {
                                               Icon(
                                                 Icons.restaurant,
                                                 size: 16,
-                                                color: Colors.green.shade700,
+                                                color: cs.tertiary,
                                               ),
                                               Text(
                                                 'home.meal_carbs'.tr(
@@ -991,8 +985,14 @@ class _DashboardState extends State<Dashboard> {
                                                   color: cs.onSurface,
                                                 ),
                                               ),
-                                              if (meal.insulinUnitsSuggested !=
-                                                  null) ...[
+                                              if (meal.insulinUnitsSuggested != null) ...[
+                                                const SizedBox(width: 12),
+                                                Icon(
+                                                  Icons.arrow_forward,
+                                                  size: 16,
+                                                  color: cs.tertiary,
+                                                ),
+                                                const SizedBox(width: 6),
                                                 Text(
                                                   'home.insulin_suggested'.tr(
                                                     namedArgs: {
@@ -1004,8 +1004,7 @@ class _DashboardState extends State<Dashboard> {
                                                   style: TextStyle(
                                                     fontSize: 14,
                                                     fontWeight: FontWeight.w700,
-                                                    color:
-                                                        Colors.green.shade800,
+                                                    color: cs.tertiary,
                                                   ),
                                                 ),
                                               ],

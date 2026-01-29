@@ -63,7 +63,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('profile.carb_ratio_required'.tr()),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -76,7 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('profile.carb_ratio_invalid'.tr()),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -93,7 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('profile.carb_ratio_saved'.tr()),
-            backgroundColor: Colors.green,
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
       }
@@ -102,7 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('profile.carb_ratio_error'.tr()),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -361,13 +361,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       FilledButton.icon(
                         onPressed: _isSavingCarbRatio ? null : _saveCarbRatio,
                         icon: _isSavingCarbRatio
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 16,
                                 height: 16,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
+                                    cs.onPrimary,
                                   ),
                                 ),
                               )
@@ -384,7 +384,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: FilledButton(
                   style: FilledButton.styleFrom(
                     backgroundColor: cs.error,
-                    foregroundColor: Colors.white,
+                    foregroundColor: cs.onError,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   onPressed: () => _showSignOutDialog(context),
