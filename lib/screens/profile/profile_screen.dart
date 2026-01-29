@@ -152,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Weight must be between 20 and 500 kg'),
+                content: Text('setup.weight_error'.tr()),
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );
@@ -173,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Height must be between 50 and 300 cm'),
+                content: Text('setup.height_error'.tr()),
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );
@@ -213,7 +213,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Glucose values must be between 50 and 400 mg/dL'),
+                content: Text('setup.glucose_range_error'.tr()),
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );
@@ -377,17 +377,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         DropdownMenuItem(value: DiabetesType.other, child: Text('setup.other'.tr())),
       ],
       onChanged: _isEditing ? onChanged : null,
-    );
-  }
-      ),
-      items: [
-        DropdownMenuItem(value: DiabetesType.type1, child: Text('setup.type1'.tr())),
-        DropdownMenuItem(value: DiabetesType.type2, child: Text('setup.type2'.tr())),
-        DropdownMenuItem(value: DiabetesType.lada, child: Text('setup.lada'.tr())),
-        DropdownMenuItem(value: DiabetesType.type3, child: Text('setup.type3'.tr())),
-        DropdownMenuItem(value: DiabetesType.other, child: Text('setup.other'.tr())),
-      ],
-      onChanged: enabled && _isEditing ? onChanged : null,
     );
   }
 
