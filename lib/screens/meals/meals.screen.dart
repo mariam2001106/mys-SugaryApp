@@ -116,7 +116,7 @@ class _MealLogScreenState extends State<MealLogScreen> {
         SnackBar(
           content: Text('meals.save_error'.tr()),
           duration: const Duration(seconds: 4),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
       return;
@@ -128,14 +128,16 @@ class _MealLogScreenState extends State<MealLogScreen> {
     
     await showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 28),
-            SizedBox(width: 8),
-            Text('meals.save_success'.tr()),
-          ],
-        ),
+      builder: (ctx) {
+        final dialogCs = Theme.of(ctx).colorScheme;
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.check_circle, color: dialogCs.tertiary, size: 28),
+              SizedBox(width: 8),
+              Text('meals.save_success'.tr()),
+            ],
+          ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,7 +157,7 @@ class _MealLogScreenState extends State<MealLogScreen> {
               SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.medication, color: Colors.blue, size: 20),
+                  Icon(Icons.medication, color: dialogCs.primary, size: 20),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -163,7 +165,7 @@ class _MealLogScreenState extends State<MealLogScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: Colors.blue.shade700,
+                        color: dialogCs.primary,
                       ),
                     ),
                   ),
@@ -178,7 +180,8 @@ class _MealLogScreenState extends State<MealLogScreen> {
             child: Text('OK', style: TextStyle(fontSize: 16)),
           ),
         ],
-      ),
+      );
+    }
     );
 
     // Reset fields after dialog is closed
@@ -206,7 +209,7 @@ class _MealLogScreenState extends State<MealLogScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            const Icon(Icons.restaurant_outlined, color: Color(0xFF2563EB)),
+            Icon(Icons.restaurant_outlined, color: cs.primary),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
