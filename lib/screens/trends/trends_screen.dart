@@ -82,7 +82,6 @@ class _TrendScreenState extends State<TrendScreen> {
                 const SizedBox(height: 16),
                 _lastReadingCard(readings),
                 const SizedBox(height: 12),
-                _a1cCard(readings),
               ],
             );
           },
@@ -102,8 +101,8 @@ class _TrendScreenState extends State<TrendScreen> {
               selected: _selectedHours == h,
               selectedColor: Theme.of(context).colorScheme.primary,
               labelStyle: TextStyle(
-                color: _selectedHours == h 
-                    ? Theme.of(context).colorScheme.onPrimary 
+                color: _selectedHours == h
+                    ? Theme.of(context).colorScheme.onPrimary
                     : Theme.of(context).colorScheme.onSurface,
                 fontWeight: _selectedHours == h
                     ? FontWeight.w700
@@ -136,7 +135,9 @@ class _TrendScreenState extends State<TrendScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
             side: BorderSide(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.3),
             ),
           ),
           elevation: 0,
@@ -222,74 +223,6 @@ class _TrendScreenState extends State<TrendScreen> {
                   const SizedBox(height: 8),
                 ],
               ),
-      ),
-    );
-  }
-
-  Widget _a1cCard(List<GlucoseEntry> readings) {
-    if (readings.isEmpty) {
-      return Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: BorderSide(color: Theme.of(context).colorScheme.outline),
-        ),
-        elevation: 1,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-          child: Center(child: Text('cards.no_data'.tr())),
-        ),
-      );
-    }
-
-    final avg =
-        readings.map((e) => e.value).fold<num>(0, (a, b) => a + b) /
-        readings.length;
-    final a1c = (avg + 46.7) / 28.7;
-
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Theme.of(context).colorScheme.outline),
-      ),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(Icons.calculate, color: Theme.of(context).colorScheme.secondary, size: 24),
-            const SizedBox(height: 6),
-            Text(
-              'a1c.last_30_days'.tr(),
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${a1c.toStringAsFixed(2)}%',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w800,
-                color: Theme.of(context).colorScheme.secondary,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.error,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                'a1c.status_controlled'.tr(),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onError,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -1,10 +1,12 @@
+import 'dart:math';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:mysugaryapp/models/user_profile.dart';
 import 'package:mysugaryapp/services/profile_service.dart';
 import 'package:flutter/rendering.dart' as fr;
-
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -14,40 +16,156 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  //controllers for personal information
+  final _emailController = TextEditingController();
+  final _fullNameController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _weightController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _emergencyContactController = TextEditingController();
+
+  // Controllers for Health Information
+  DiabetesType? _selectedDiabetesType;
+  final _currentMedicationController = TextEditingController();
+  final _targetGlucoseMinController = TextEditingController();
+  final _targetGlucoseMaxController = TextEditingController();
+
+  //carbohydrate ratio state
   final _carbRatioController = TextEditingController();
   bool _isLoadingCarbRatio = true;
   bool _isSavingCarbRatio = false;
 
+  bool _isLoading = true;
+  bool _isSaving = false;
+  bool _isEditing = false;
+
   @override
   void initState() {
     super.initState();
-    _loadCarbRatio();
+    _loadUserData();
   }
 
   @override
   void dispose() {
     _carbRatioController.dispose();
+    _emailController.dispose();
+    _fullNameController.dispose();
+    _ageController.dispose();
+    _weightController.dispose();
+    _heightController.dispose();
+    _emergencyContactController.dispose();
+    _currentMedicationController.dispose();
+    _targetGlucoseMinController.dispose();
+    _targetGlucoseMaxController.dispose();
+
     super.dispose();
   }
 
-  Future<void> _loadCarbRatio() async {
+  Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     try {
       final data = await ProfileService().getUserDataFromServer(user.uid);
       if (data != null && mounted) {
-        final carbRatio = data['carbRatio'];
-        if (carbRatio != null) {
-          _carbRatioController.text = carbRatio.toString();
+        _fullNameController.text = data['displayName']?.toString() ?? '';
+        _emailController.text = user.email ?? '';
+        _ageController.text = data['age']?.toString() ?? '';
+        _weightController.text = data['weight']?.toString() ?? '';
+        _heightController.text = data['height']?.toString() ?? '';
+        _emergencyContactController.text =
+            data['emergencyContact']?.toString() ?? '';
+        _currentMedicationController.text =
+            data['medicationName']?.toString() ?? '';
+        _carbRatioController.text = data['carbRatio']?.toString() ?? '';
+
+        //load diabetes type
+        final diabetesStr = data['diabetesType']?.toString() ?? '';
+        _selectedDiabetesType = _diabetesTypeFromString(diabetesStr);
+
+        //load glucose ranges
+        final glucoseRanges = data['glucoseRanges'] as Map<String, dynamic>?;
+        if (glucoseRanges != null) {
+          _targetGlucoseMinController.text =
+              glucoseRanges['targetMin']?.toString() ?? '80';
+          _targetGlucoseMaxController.text =
+              glucoseRanges['targetMax']?.toString() ?? '130';
         }
       }
     } catch (e) {
-      // Ignore errors silently
+      print('error loading user data: $e');
     } finally {
       if (mounted) {
         setState(() {
+          _isLoading = false;
           _isLoadingCarbRatio = false;
+        });
+      }
+    }
+  }
+
+   DiabetesType _diabetesTypeFromString(String? v) {
+    switch (v) {
+      case 'type1':
+        return DiabetesType.type1;
+      case 'type2':
+        return DiabetesType.type2;
+      case 'lada':
+        return DiabetesType.lada;
+      case 'type3':
+        return DiabetesType.type3;
+      default:
+        return DiabetesType.other;
+    }
+  }
+
+  Future <void> _saveprofile() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final updatedData = {
+        'displayName': _fullNameController.text.trim(),
+        'age': int.tryParse(_ageController.text.trim()),
+        'weight': double.tryParse(_weightController.text.trim()),
+        'height': double.tryParse(_heightController.text.trim()),
+        'emergencyPhoneNumber': _emergencyContactController.text.trim(),
+        'diabetesType': _selectedDiabetesType?.name,
+        'medicationName': _currentMedicationController.text.trim(),
+        'glucoseRanges': {
+          'targetMin': int.tryParse(_targetGlucoseMinController.text.trim()),
+          'targetMax': int.tryParse(_targetGlucoseMaxController.text.trim()),
+        },
+      };
+
+      await ProfileService().updatePartial(user.uid, updatedData);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('profile.profile_updated'.tr()),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('profile.profile_update_error'.tr()),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+          _isEditing = false;
         });
       }
     }
@@ -97,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -213,7 +331,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 6),
                         Text(
                           user?.email ?? '-',
-                          style: TextStyle(color: cs.onSurface.withValues(alpha: .7)),
+                          style: TextStyle(
+                            color: cs.onSurface.withValues(alpha: .7),
+                          ),
                         ),
                       ],
                     ),
@@ -338,9 +458,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             )
                           : TextField(
                               controller: _carbRatioController,
-                              keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
                                   RegExp(r'^\d*\.?\d*'),
@@ -350,7 +471,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 labelText: 'profile.carb_ratio_label'.tr(),
                                 hintText: '15',
                                 helperText: 'profile.carb_ratio_example'.tr(),
-                                prefixIcon: Icon(Icons.food_bank, color: cs.primary),
+                                prefixIcon: Icon(
+                                  Icons.food_bank,
+                                  color: cs.primary,
+                                ),
                                 suffixText: 'g',
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),

@@ -41,11 +41,15 @@ class GlucoseRanges {
 class UserProfile {
   final String uid;
   final String? displayName;
+  final String? email;
   final DiabetesType diabetesType;
   final bool takesPills;
   final InsulinMethod insulinMethod;
   final DateTime? dateOfBirth;
   final int? age;
+  final double? whigth;
+  final double? height;
+  final String? emergencyPhoneNumber;
   final String? medicationName;
   final List<MedTime> medicationTimes;
   final GlucoseRanges glucoseRanges;
@@ -57,11 +61,15 @@ class UserProfile {
   const UserProfile({
     required this.uid,
     this.displayName,
+    this.email,
     required this.diabetesType,
     required this.takesPills,
     required this.insulinMethod,
     required this.dateOfBirth,
     required this.age,
+    this.whigth,
+    this.height,
+    this.emergencyPhoneNumber,
     this.medicationName,
     required this.medicationTimes,
     required this.glucoseRanges,
@@ -74,11 +82,15 @@ class UserProfile {
   factory UserProfile.initial(String uid) => UserProfile(
     uid: uid,
     displayName: null,
+    email: null,
     diabetesType: DiabetesType.other,
     takesPills: false,
     insulinMethod: InsulinMethod.none,
     dateOfBirth: null,
     age: null,
+    whigth: null,
+    height: null,
+    emergencyPhoneNumber: null,
     medicationName: null,
     medicationTimes: const [],
     glucoseRanges: const GlucoseRanges(
@@ -95,6 +107,7 @@ class UserProfile {
 
   Map<String, dynamic> toMap() => {
     'displayName': displayName,
+    'email': email,
     'diabetesType': diabetesType.name,
     'takesPills': takesPills,
     'insulinMethod': insulinMethod.name,
@@ -102,6 +115,9 @@ class UserProfile {
         ? null
         : Timestamp.fromDate(dateOfBirth!),
     'age': age,
+    'whigth': whigth,
+    'height': height,
+    'emergencyPhoneNumber': emergencyPhoneNumber,
     'medicationName': medicationName,
     'medicationTimes': medicationTimes.map((e) => e.name).toList(),
     'glucoseRanges': glucoseRanges.toMap(),
@@ -116,11 +132,15 @@ class UserProfile {
     return UserProfile(
       uid: doc.id,
       displayName: d['displayName'] as String?,
+      email: d['email'] as String?,
       diabetesType: _diabetesFromString(d['diabetesType'] as String?),
       takesPills: (d['takesPills'] ?? false) as bool,
       insulinMethod: _insulinFromString(d['insulinMethod'] as String?),
       dateOfBirth: (d['dateOfBirth'] as Timestamp?)?.toDate(),
       age: d['age'] == null ? null : (d['age'] as num).toInt(),
+      whigth: d['whigth']== null ? null : (d['whigth'] as num).toDouble(),
+      height: d['height']== null ? null : (d['height']as num).toDouble(),
+      emergencyPhoneNumber: d['emergencyPhoneNumber'] as String?,
       medicationName: d['medicationName'] as String?,
       medicationTimes: ((d['medicationTimes'] as List?) ?? const [])
           .map((e) => _medTimeFromString('$e'))
