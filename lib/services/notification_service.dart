@@ -78,6 +78,9 @@ class NotificationService {
     }
   }
 
+  /// Test notification ID - reserved to avoid conflicts with reminder IDs
+  static const int _testNotificationId = 999999;
+
   /// Generates a stable integer ID for a reminder.
   int _idForReminder(ReminderItemDto r) => r.id.hashCode & 0x7fffffff;
 
@@ -189,7 +192,7 @@ class NotificationService {
     final scheduled = now.add(Duration(seconds: seconds));
     debugPrint('[NotificationService] test schedule in $seconds sec at $scheduled');
     await _plugin.zonedSchedule(
-      999999, // test ID
+      _testNotificationId,
       title,
       body,
       scheduled,

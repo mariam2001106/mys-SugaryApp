@@ -89,9 +89,9 @@ You can check pending notifications programmatically by adding debug code:
 ```dart
 // In your reminders screen after scheduling:
 final pending = await NotificationService.instance.getPendingNotifications();
-print('Pending notifications: ${pending.length}');
+debugPrint('Pending notifications: ${pending.length}');
 for (final p in pending) {
-  print('  ID: ${p.id}, Title: ${p.title}, Body: ${p.body}');
+  debugPrint('  ID: ${p.id}, Title: ${p.title}, Body: ${p.body}');
 }
 ```
 
@@ -171,14 +171,14 @@ Use this checklist to troubleshoot:
 
 ## Verify the Fix
 
-To confirm the fix is applied, check these lines in `lib/services/notification_service.dart`:
+To confirm the fix is applied, check these sections in `lib/services/notification_service.dart`:
 
-1. **Line ~3**: Should import `latest_all.dart`:
+1. **Import statements**: Should import `latest_all.dart`:
    ```dart
    import 'package:timezone/data/latest_all.dart' as tzdata;
    ```
 
-2. **Line ~27-41**: Should have timezone fallback logic:
+2. **Timezone initialization section**: Should have timezone fallback logic:
    ```dart
    try {
      final location = tz.local;
@@ -186,14 +186,14 @@ To confirm the fix is applied, check these lines in `lib/services/notification_s
      ...
    ```
 
-3. **Line ~67-71**: Should request exact alarm permission:
+3. **Permission request section**: Should request exact alarm permission:
    ```dart
    await _plugin
        .resolvePlatformSpecificImplementation<...>()
        ?.requestExactAlarmsPermission();
    ```
 
-4. **Line ~157**: Should use exact scheduling:
+4. **Scheduling configuration**: Should use exact scheduling:
    ```dart
    androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
    ```
