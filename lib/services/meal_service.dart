@@ -5,7 +5,6 @@ import 'package:mysugaryapp/models/meals_enrty_model.dart';
 /// Service for meal logging and retrieval.
 /// Storage layout:
 /// users/{uid}/meals/logs/{mealId}
-/// Optional: users/{uid}/meals/common/{foodId} for common foods (if you add UI)
 class MealService {
   final _db = FirebaseFirestore.instance;
 
@@ -19,7 +18,6 @@ class MealService {
     required String name,
     required MealType type,
     required DateTime timestamp,
-    List<FoodItem>? items,
     num? directCarbs,
     num? directCalories,
     String? note,
@@ -28,33 +26,35 @@ class MealService {
     if (uid == null) return null;
 
     // Use direct values if provided, otherwise derive from items
-    final itemsList = items ?? [];
+
     num totalCarbs;
     num? totalCalories;
-    
-    if (directCarbs != null) {
-      totalCarbs = directCarbs;
-      totalCalories = directCalories;
-    } else {
-      final totals = MealEntry.deriveTotals(itemsList);
-      totalCarbs = totals.carbs;
-      totalCalories = totals.calories;
-    }
 
-    final carbRatio = await _fetchCarbRatio(uid); // dynamic; no fallback default
+    totalCarbs = directCarbs ?? 0;
+    totalCalories = directCalories;
+
+    final carbRatio = await _fetchCarbRatio(
+      uid,
+    ); // dynamic; no fallback default
 
     num? insulinUnits;
     if (carbRatio != null && carbRatio > 0 && totalCarbs > 0) {
       insulinUnits = totalCarbs / carbRatio;
     }
 
-    final ref = _db.collection('users').doc(uid).collection('meals').doc('logs').collection('list').doc();
+    final ref = _db
+        .collection('users')
+        .doc(uid)
+        .collection('meals')
+        .doc('logs')
+        .collection('list')
+        .doc();
     final entry = MealEntry(
       id: ref.id,
       name: name,
       type: type,
       timestamp: timestamp,
-      items: itemsList,
+
       totalCarbs: totalCarbs,
       totalCalories: totalCalories,
       insulinUnitsSuggested: insulinUnits,
@@ -117,7 +117,10 @@ class MealService {
         .collection('meals')
         .doc('logs')
         .collection('list')
-        .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(sinceUtc))
+        .where(
+          'timestamp',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(sinceUtc),
+        )
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snap) => snap.docs.map(MealEntry.fromDoc).toList());
@@ -163,50 +166,5 @@ class MealService {
     if (r2 is num) return r2;
 
     return null;
-  }
-
-  // Optional: common foods helpers (if you store a user-specific common foods list)
-  Future<void> upsertCommonFood({
-    required String name,
-    required num carbsGrams,
-    num? calories,
-    String? unit,
-  }) async {
-    final uid = _uid;
-    if (uid == null) return;
-
-    final col = _db
-        .collection('users')
-        .doc(uid)
-        .collection('meals')
-        .doc('common')
-        .collection('foods');
-
-    final ref = col.doc(name.trim().toLowerCase().replaceAll(' ', '_'));
-    await ref.set({
-      'name': name,
-      'carbsGrams': carbsGrams,
-      'calories': calories,
-      'unit': unit,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-  }
-
-  Stream<List<FoodItem>> commonFoodsStream() {
-    final uid = _uid;
-    if (uid == null) return const Stream.empty();
-
-    return _db
-        .collection('users')
-        .doc(uid)
-        .collection('meals')
-        .doc('common')
-        .collection('foods')
-        .orderBy('name')
-        .snapshots()
-        .map((snap) => snap.docs.map((d) {
-              final m = d.data();
-              return FoodItem.fromMap(m);
-            }).toList());
   }
 }

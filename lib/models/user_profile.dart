@@ -17,6 +17,7 @@ class GlucoseRanges {
     required this.targetMin,
     required this.targetMax,
     required this.veryLow,
+    
   });
 
   Map<String, dynamic> toMap() => {

@@ -71,7 +71,9 @@
         "mg_dl_unit": "ملغ/ديسيلتر",
         "empty_glucose_title": "أضف أول قراءة جلوكوز",
         "empty_glucose_subtitle": "ابدأ رحلتك في مراقبة الجلوكوز بإضافة أول قراءة",
-        "empty_glucose_cta": "إضافة قراءة جلوكوز"
+        "empty_glucose_cta": "إضافة قراءة جلوكوز",
+        "meal_carbs": "{carbs}غ كربوهيدرات",
+        "insulin_suggested": "الأنسولين المقترح: {units} وحدات"
     },
     "errors": {
         "unexpected": "حدث خطأ غير متوقع"

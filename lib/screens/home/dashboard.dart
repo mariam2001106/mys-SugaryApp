@@ -554,13 +554,6 @@ class _DashboardState extends State<Dashboard> {
                         },
                       ),
                       const SizedBox(height: 14),
-                      _metricCard(
-                        icon: Icons.lunch_dining,
-                        color: cs.secondary,
-                        title: 'home.todays_meals_title'.tr(),
-                        subtitle: 'home.todays_meals_value'.tr(),
-                      ),
-                      const SizedBox(height: 14),
 
                       // Optional: live A1C summary card (remove if you don't want A1C on Home)
                       A1CCard(),
@@ -668,20 +661,6 @@ class _DashboardState extends State<Dashboard> {
                                   onTap: () => Navigator.of(
                                     context,
                                   ).pushNamed('/trends'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    // NotificationsService.showNotification(body: "body", title: "title", payload: "payload");
-                                  },
-                                  child: const Text('show'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    // NotificationsService.showNotification(body: "body", title: "title", payload: "payload");
-                                    // NotificationsService.showPreiodicNotification(body: "body", title: "timely", payload: "payload");
-                                    // NotificationsService.cancelNotification(1);
-                                  },
-                                  child: const Text('timing a noti'),
                                 ),
                               ],
                             ),
@@ -917,11 +896,20 @@ class _DashboardState extends State<Dashboard> {
                                     final timeFmt = DateFormat.jm();
                                     final formattedDate =
                                         '${dateFmt.format(meal.timestamp)} • ${timeFmt.format(meal.timestamp)}';
+                                    final mealTypeLabel = _mealTypeLabel(
+                                      meal.type,
+                                    );
+                                    final mealTypeDisplay =
+                                        context.locale.languageCode == 'ar'
+                                        ? mealTypeLabel
+                                        : mealTypeLabel.toUpperCase();
 
                                     return Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.7),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.7,
+                                        ),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
                                           color: Colors.green.shade200,
@@ -945,21 +933,23 @@ class _DashboardState extends State<Dashboard> {
                                                 ),
                                               ),
                                               Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 8,
-                                                  vertical: 4,
-                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4,
+                                                    ),
                                                 decoration: BoxDecoration(
                                                   color: Colors.green.shade100,
                                                   borderRadius:
                                                       BorderRadius.circular(8),
                                                 ),
                                                 child: Text(
-                                                  meal.type.name.toUpperCase(),
+                                                  mealTypeDisplay,
                                                   style: TextStyle(
                                                     fontSize: 11,
                                                     fontWeight: FontWeight.w600,
-                                                    color: Colors.green.shade800,
+                                                    color:
+                                                        Colors.green.shade800,
                                                   ),
                                                 ),
                                               ),
@@ -969,48 +959,60 @@ class _DashboardState extends State<Dashboard> {
                                           Text(
                                             formattedDate,
                                             style: TextStyle(
-                                              color: cs.onSurface
-                                                  .withValues(alpha: 0.6),
+                                              color: cs.onSurface.withValues(
+                                                alpha: 0.6,
+                                              ),
                                               fontSize: 12,
                                             ),
                                           ),
                                           const SizedBox(height: 12),
-                                          Row(
+                                          Wrap(
+                                            alignment: WrapAlignment.start,
+                                            crossAxisAlignment:
+                                                WrapCrossAlignment.center,
+                                            spacing: 8,
+                                            runSpacing: 6,
                                             children: [
                                               Icon(
                                                 Icons.restaurant,
                                                 size: 16,
                                                 color: Colors.green.shade700,
                                               ),
-                                              const SizedBox(width: 6),
                                               Text(
-                                                '${meal.totalCarbs}g carbs',
+                                                'home.meal_carbs'.tr(
+                                                  namedArgs: {
+                                                    'carbs': meal.totalCarbs
+                                                        .toString(),
+                                                  },
+                                                ),
                                                 style: TextStyle(
                                                   fontSize: 14,
                                                   fontWeight: FontWeight.w600,
                                                   color: cs.onSurface,
                                                 ),
                                               ),
-                                              if (meal.insulinUnitsSuggested != null) ...[
-                                                const SizedBox(width: 12),
-                                                Icon(
-                                                  Icons.arrow_forward,
-                                                  size: 16,
-                                                  color: Colors.green.shade700,
-                                                ),
-                                                const SizedBox(width: 6),
+                                              if (meal.insulinUnitsSuggested !=
+                                                  null) ...[
                                                 Text(
-                                                  'Suggested insulin: ${meal.insulinUnitsSuggested!.toStringAsFixed(2)} units',
+                                                  'home.insulin_suggested'.tr(
+                                                    namedArgs: {
+                                                      'units': meal
+                                                          .insulinUnitsSuggested!
+                                                          .toStringAsFixed(2),
+                                                    },
+                                                  ),
                                                   style: TextStyle(
                                                     fontSize: 14,
                                                     fontWeight: FontWeight.w700,
-                                                    color: Colors.green.shade800,
+                                                    color:
+                                                        Colors.green.shade800,
                                                   ),
                                                 ),
                                               ],
                                             ],
                                           ),
-                                          if (meal.note != null && meal.note!.isNotEmpty) ...[
+                                          if (meal.note != null &&
+                                              meal.note!.isNotEmpty) ...[
                                             const SizedBox(height: 8),
                                             Row(
                                               children: [
@@ -1027,11 +1029,15 @@ class _DashboardState extends State<Dashboard> {
                                                     style: TextStyle(
                                                       fontSize: 12,
                                                       color: cs.onSurface
-                                                          .withValues(alpha: 0.7),
-                                                      fontStyle: FontStyle.italic,
+                                                          .withValues(
+                                                            alpha: 0.7,
+                                                          ),
+                                                      fontStyle:
+                                                          FontStyle.italic,
                                                     ),
                                                     maxLines: 2,
-                                                    overflow: TextOverflow.ellipsis,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
                                                   ),
                                                 ),
                                               ],
@@ -1056,6 +1062,22 @@ class _DashboardState extends State<Dashboard> {
         },
       ),
     );
+  }
+
+  String _mealTypeLabel(MealType type) {
+    switch (type) {
+      case MealType.breakfast:
+        return 'meals.type_breakfast'.tr();
+      case MealType.lunch:
+        return 'meals.type_lunch'.tr();
+      case MealType.dinner:
+        return 'meals.type_dinner'.tr();
+      case MealType.snack:
+        return 'meals.type_snack'.tr();
+      case MealType.other:
+      default:
+        return 'meals.type_other'.tr();
+    }
   }
 
   Widget _iconSquare({required IconData icon, required VoidCallback onTap}) {
